@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="配置高水压螺栓工况，查看候选布置和 Abaqus 存档云图。"><title>沧砼鉴 | 高水压仿真工作台</title>
+<link rel="stylesheet" href="style.css">
+<script defer src="app.js"></script>
+</head>
+<body>
+<header class="top"><div class="shell top-inner"><div class="brand"><span class="mark" aria-hidden="true">▥</span><strong>沧砼鉴</strong><span class="separator"></span><span>高水压仿真工作台</span></div><span class="edition">Abaqus 案例演示</span></div></header>
+<main class="shell">
+<section class="intro"><div><h1>高水压螺栓仿真</h1><p>配置试件与载荷，查看候选布置及 Abaqus 存档结果。</p></div><button id="reset" type="button">恢复 32 根工况</button></section>
+<div class="workspace">
+<aside class="panel settings" aria-labelledby="config-title">
+<h2 id="config-title">工况参数</h2>
+<form id="form">
+<div class="group"><h3>螺栓与载荷</h3><div class="fields">
+<label>螺栓数量 <span class="input"><input name="count" type="number" min="4" max="128" step="2" value="32" required><span>根</span></span></label>
+<label>水压 <span class="input"><input name="pressure" type="number" min="0.01" step="any" value="5" required><span>MPa</span></span></label>
+<label>螺栓直径 <span class="input"><input name="diameter" type="number" min="1" step="any" value="45" required><span>mm</span></span></label>
+<label>螺栓长度 <span class="input"><input name="boltLength" type="number" min="1" step="any" value="1000" required><span>mm</span></span></label></div></div>
+<div class="group"><h3>试件尺寸 <small>mm</small></h3><div class="fields triple">
+<label>长度<input name="length" type="number" min="1" step="any" value="2000" required></label>
+<label>宽度<input name="width" type="number" min="1" step="any" value="1000" required></label>
+<label>厚度<input name="depth" type="number" min="1" step="any" value="500" required></label></div></div>
+<div class="group"><h3>预制裂缝 <small>mm</small></h3><div class="fields triple">
+<label>长度<input name="crackL" type="number" min="0.01" step="any" value="300" required></label>
+<label>高度<input name="crackH" type="number" min="0.01" step="any" value="100" required></label>
+<label>开度<input name="crackW" type="number" min="0.01" step="any" value="2" required></label></div></div>
+<button class="primary" type="submit">生成布置并匹配结果</button>
+<p id="form-note" class="hint" role="status">基准模型为 C40 混凝土，底端固定。</p>
+</form>
+</aside>
+<section class="panel results" aria-labelledby="result-title">
+<div class="result-head"><div><h2 id="result-title">仿真结果</h2><p id="subtitle">32 根螺栓 / 5 MPa / jieguo2</p></div><span class="badge" id="badge">已匹配存档</span></div>
+<div class="tabs" aria-label="结果视图"><button type="button" data-view="cloud" aria-pressed="true">Abaqus 云图</button><button type="button" data-view="layout" aria-pressed="false">螺栓布置</button><button type="button" data-view="compare" aria-pressed="false">测点对比</button></div>
+<div class="view" id="cloud">
+<div class="toolbar"><label for="part">查看部件</label><select id="part"><option value="concrete">混凝土</option><option value="tank">加压水箱</option></select><label for="quantity">结果变量</label><select id="quantity"><option value="u">U3 / Z 向位移</option><option value="s">S33 / Z 向应力</option></select></div>
+<figure id="figure"><a id="original" href="assets/image18.png" target="_blank" rel="noopener"><img id="contour" src="assets/image18.png" alt="Abaqus 混凝土 Z 向位移存档云图"></a><figcaption><span id="caption">混凝土 Z 向位移</span><a id="image-link" href="assets/image18.png" target="_blank" rel="noopener">查看原图</a></figcaption></figure>
+<div id="empty" class="empty" hidden><h3>该工况暂无云图</h3><p id="empty-text"></p><button type="button" id="show-layout">查看候选布置</button></div>
+<p id="source" class="source">来源《Abaqus模拟情况》一、32 根钢筋，jieguo2</p>
+</div>
+<div class="view" id="layout" hidden>
+<div class="toolbar"><span id="layout-summary"></span><span class="hint">正视示意</span></div>
+<div class="diagram" id="diagram" role="img"><div class="flange" id="flange"><div class="opening"></div></div></div>
+<p class="source" id="layout-note"></p>
+<details><summary>查看存档装配图</summary><img class="assembly" src="assets/image5.png" alt="附件中的基准装配视图"></details>
+</div>
+<div class="view" id="compare" hidden>
+<div class="toolbar"><strong>32 根与 16 根螺栓</strong><span class="hint">存档对照</span></div>
+<p class="hint">按附件汇总表的四个测点比较混凝土与钢板的 Z 向位移差值。</p>
+<div class="table-scroll"><table><thead><tr><th scope="col">测点</th><th scope="col">32 根（mm）</th><th scope="col">16 根（mm）</th></tr></thead><tbody><tr><th scope="row">1</th><td>−0.0318</td><td>−0.091726</td></tr><tr><th scope="row">2</th><td>−0.1509</td><td>−0.130675</td></tr><tr><th scope="row">3</th><td>−0.3016</td><td>−0.4086</td></tr><tr><th scope="row">4</th><td>−0.2834</td><td>−0.5411</td></tr></tbody></table></div>
+<p class="source">按这四个测点的最大绝对差值比较，32 根为 0.3016 mm，16 根为 0.5411 mm。该比较只覆盖这两组存档数据。</p>
+</div>
+</section>
+</div>
+<footer><span>混凝土高水压加载试验</span><span>存档回放与候选布置 / 工程应用需复核</span></footer>
+</main>
+</body></html>

@@ -30,8 +30,10 @@ def node_index(axis, coordinate):
     return nearest
 
 
-def write_deck(params, destination):
-    """C3D8 mesh with matching nodes across a perfectly bonded flange interface."""
+MESH_LIMIT = 160000
+
+
+def model_axes(params):
     cavity_x, cavity_y = params['L'] / 2.0, params['W'] / 2.0
     outer_x = cavity_x + params['off'] + params['flange_lip_mm']
     outer_y = cavity_y + params['off'] + params['flange_lip_mm']
@@ -43,10 +45,36 @@ def write_deck(params, destination):
                   [h['y_mm'] for h in holes], mesh_size)
     t, flange_t = params['plate_thickness_mm'], params['flange_thickness_mm']
     z = divisions([0.0, t, t + flange_t], mesh_size)
-    interface = node_index(z, t)
+    return x, y, z, node_index(z, t), (cavity_x, cavity_y), (outer_x, outer_y)
+
+
+def mesh_preflight(params):
+    x, y, z, interface, cavity, outer = model_axes(params)
     nx, ny, nz = len(x) - 1, len(y) - 1, len(z) - 1
-    if nx * ny * nz > 160000:
-        raise ValueError("Estimated mesh exceeds 160000 cells; increase mesh size or reduce bolt count.")
+
+    def bands(axis, inner, outer):
+        midpoints = [abs((a + b) / 2.0) for a, b in zip(axis, axis[1:])]
+        return sum(p < inner for p in midpoints), sum(p < outer for p in midpoints)
+
+    wet_x, flange_x = bands(x, cavity[0], outer[0])
+    wet_y, flange_y = bands(y, cavity[1], outer[1])
+    pressure_faces = wet_x * wet_y
+    return {
+        "elements": nx * ny * interface + (flange_x * flange_y - pressure_faces) * (nz - interface),
+        "pressure_faces": pressure_faces,
+        "thrust_kn": params['pressure_mpa'] * params['L'] * params['W'] / 1000.0,
+        "within_mesh_limit": nx * ny * nz <= MESH_LIMIT,
+        "mesh_limit": MESH_LIMIT,
+    }
+
+
+def write_deck(params, destination):
+    """C3D8 mesh with matching nodes across a perfectly bonded flange interface."""
+    x, y, z, interface, (cavity_x, cavity_y), (outer_x, outer_y) = model_axes(params)
+    nx, ny, nz = len(x) - 1, len(y) - 1, len(z) - 1
+    if nx * ny * nz > MESH_LIMIT:
+        raise ValueError("Estimated mesh exceeds %d cells; increase mesh size or reduce bolt count." % MESH_LIMIT)
+    holes = params['holes']
     labels, nodes, concrete, flange, water_elements = {}, [], [], [], []
 
     def node(i, j, k):

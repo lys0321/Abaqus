@@ -10,6 +10,7 @@ import re
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 
+from .abaqus.build_model import mesh_preflight
 from .jobs import Jobs, QueueFull, Settings
 from .physics import (
     LayoutRequest, SimulationRequest, StressGeometry, StressRequest, estimate, optimize, sweep_stress,
@@ -66,6 +67,10 @@ def create_app(settings=None):
         available = bool(jobs.settings.abaqus)
         return {"available": available, "mode": "abaqus" if available else "demo",
                 "reason": None if available else "未配置有效的 ABAQUS_PATH。"}
+
+    @app.post("/api/simulation/preflight")
+    def preflight(request: SimulationRequest):
+        return mesh_preflight(request.model_dump())
 
     @app.post("/api/simulation/run", status_code=202)
     def submit(request: SimulationRequest, background: BackgroundTasks):

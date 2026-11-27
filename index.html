@@ -5,16 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="沧砼鉴高水压装夹工作台。设计水腔与孔圈、比较螺栓布局、查看装夹附加应力估算和 Abaqus 存档。">
 <title>高水压装夹工作台 | 沧砼鉴</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAz0lEQVR4nGOU8LBjoCVgoqnpDKMWEAFGWhxcX70QThIJGInPB9dRzdUMjaeaBddhRsMNxRQhP4iuYzML0yZyfECMM68TUoPdAmR3aRIKBPyKsVhAfPgSo2sgfECPOCDGiOvEhSThZKqJLUUSH084fTCxuiC/dQJWJ2M1GlM9Ph9MrC6Ak2gmIpP41ROOA7iGfGxOI1INvjiA65mIzWlEuoCowm4ihkHEGE1CfZCPai7xppNWHzCQaDQ5NVo+2FziTSfZB0O/0icDjFrAQAgAABo0dazV/SwQAAAAAElFTkSuQmCC">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAzklEQVR4nGNUtYhmoCVgoqnpDKMWEAFGWhzs2zQXThIJGInPB/tQzXXyS6aaBftgRsMNxRQhP4j2YTML0yZyfECMM/cRUoPdAmR3OREKBPyKsVhAfPgSo2sgfECPOCDGiH3EhSThZOqELUUSH084fVBR19HRVIHVyViNxlSPzwcVdR1wEs1EZBK/esJxANfQgc1pRKrBFwdwPRXYnEakC4gq7CowDCLGaBLqgw5Uc4k3nbT6gIFEo8mp0TrA5hJvOsk+GPqVPhlg1AIGQgAAARJ3MpUKn70AAAAASUVORK5CYII=">
 <style>
+
 :root {
   color-scheme: light;
-  --paper: #f4f3ec; --sheet: #fbfaf4; --plot: #f8f7ef; --text: #21302e;
-  --muted: #51625e; --quiet: #667570; --line: #d9dcd1; --strong-line: #bfc9be;
-  --mint: #255c52; --mint-dark: #18483e; --wash: #e7eee5;
-  --peak: #9b3b20; --amber-wash: #f4e7d8; --rail: #e9eae0;
-  --font: "Aptos", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
-  --display: "Noto Serif CJK SC", "Songti SC", "Noto Serif SC", "SimSun", serif;
+  --paper:#eff1f5; --sheet:#ffffff; --plot:#f7f8fc; --text:#1b2433;
+  --muted:#4e5c73; --quiet:#59677c; --line:#dce2ec; --strong-line:#c7d0df;
+  --mint:#315caa; --mint-dark:#254986; --wash:#edf3ff;
+  --peak:#a1472b; --amber-wash:#fff1e9; --rail:#1e2533; --rail-line:#3b4658;
+  --display:"Aptos Display", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
+--font: "Aptos", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
   --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -109,7 +110,6 @@ kbd { padding: 0 4px; border: 1px solid var(--line); border-radius: 2px; color: 
 .canvas-wrap { position: relative; background: var(--plot); }
 .canvas-wrap::after { content: ""; position: absolute; inset: 8px; border: 1px solid #dce3d655; pointer-events: none; }
 canvas { width: 100%; height: clamp(345px, 36vw, 485px); display: block; }
-#assembly-canvas { cursor: pointer; }
 #stress-canvas { cursor: crosshair; height: clamp(330px, 35vw, 470px); }
 .key { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; }
 .swatch { width: 8px; height: 8px; display: inline-block; }
@@ -251,7 +251,6 @@ dialog .plate-head { padding: 12px; }
   .work-head h1 { font-size: 37px; }
   .work-head p:last-child { font-size: 11px; }
   .bench, .after-bench { grid-template-columns: minmax(0,1fr); gap: 13px; }
-  .bench.layout-bench .inspect { order: -1; }
   .bench.layout-bench .inspect { padding: 11px; }
   .bench.layout-bench .fields { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
   .bench.layout-bench .inspect > section + section { margin-top: 9px; padding-top: 8px; }
@@ -266,6 +265,110 @@ dialog .plate-head { padding: 12px; }
   .snapshot-row { grid-template-columns: minmax(0,1fr); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+/* The instrument rail and viewport use graphite. Paper and data panels carry the numerical work. */
+
+.top { border-bottom:1px solid #d4dce9; }
+.brand b { letter-spacing:.08em; }
+.mark { background:#25385b; border-radius:7px; }
+.mark::before,.mark::after { border-color:#e3eaf8; }
+.button { border-radius:6px; }
+.button:hover { border-color:#a6b7d7; }
+.button.primary,.button[aria-pressed="true"] { color:#fff; }
+.rail { border-color:var(--rail-line); }
+.rail-title,.rail .eyebrow,.rail .spec,.rail .step-no { color:#aab9cf; }
+.rail-context { border-color:var(--rail-line); }
+.rail-context output { color:#eef3fb; }
+.workflow a { color:#e5ebf7; border-radius:7px; }
+.workflow a:hover { background:#2a3548; }
+.workflow a[aria-current="page"] { color:#fff; background:#33476b; border-color:#495c7c; box-shadow:inset 2px 0 #a3beff; }
+.workflow a[aria-current="page"] .step-no,.workflow a[aria-current="page"] .rail-arrow { color:#d0dfef; }
+.work-head h1 { font-size:clamp(34px,4vw,53px); font-weight:700; letter-spacing:-.085em; margin-bottom:10px; }
+.work-head h1:focus { outline:none; }
+.stamp { color:#435c86; letter-spacing:.15em; }
+.plate,.sheet,.metrics { border-color:var(--line); }
+.plate,.sheet { border-radius:10px; }
+.plate { overflow:hidden; }
+.stage-plate { border-radius:10px 10px 0 0; }
+.stage-plate .plate-head { padding:10px 13px; }
+.stage-plate .plate-head h2 { letter-spacing:.02em; }
+.field input,.field select { background:#fbfcff; border-radius:5px; }
+.metrics { background:#e8edf5; border-radius:0 0 9px 9px; }
+.metrics > div + div { border-color:#d2dbe8; }
+thead th { background:#eff3f9; }
+dialog,.js-toast { box-shadow: 0 16px 48px #24335038; }
+dialog::backdrop { background:#19243877; }
+.swatch.candidate { background:#677792; }
+.swatch.water { background:#82addb; border-color:#3d6faf; }
+.swatch.bolt { background:#b76f3d; }
+.assembly-stage {
+  position:relative; min-width:0; height:clamp(345px,36vw,476px); isolation:isolate;
+  color:#e8eef7; cursor:grab; touch-action:none; outline-offset:-3px;
+  background-color:#202836;
+  background-image:radial-gradient(ellipse at 52% 36%,#364763 0%,#263247 47%,#202836 85%);
+}
+.assembly-stage::before {
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(circle at center,#a4b8dc30 0 1px,transparent 1px);
+  background-size:21px 21px; -webkit-mask-image:linear-gradient(#0007,#000); mask-image:linear-gradient(#0007,#000);
+}
+.assembly-stage canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.assembly-stage #axis-widget { inset:auto auto 6px 7px; width:76px; height:62px; }
+.viewer-help { flex-basis:100%; }
+.assembly-stage.moving { cursor:grabbing; }
+.stage-info,.stage-tools { position:absolute; z-index:1; display:flex; align-items:center; gap:5px; }
+.stage-info { left:13px; top:13px; color:#d9e4f8; pointer-events:none; }
+.stage-info .spec { color:#d9e4f8; }
+.stage-info::before { content:""; display:block; width:6px; height:6px; border:1px solid #bbcfff; border-radius:50%; }
+.stage-tools { right:10px; bottom:10px; }
+.stage-tools .button { min-width:31px; min-height:32px; padding:4px 7px; border-color:#5d6e8b; background:#212b3c; color:#edf3fd; box-shadow:0 5px 10px #1119274d; }
+.stage-tools .button:hover,.stage-tools .button[aria-pressed="true"] { background:#455c83; }
+.assembly-stage :focus-visible { outline-color:#bbd1ff; }
+.bolt-tag { pointer-events:none; position:absolute; z-index:1; transform:translate(-50%,-120%); padding:2px 6px; border:1px solid #d0b99890; border-radius:3px; font:11px/1.5 var(--mono); background:#202b3e; color:#ffdbac; white-space:nowrap; }
+.viewer-empty { position:absolute; inset:0; display:grid; place-items:center; color:#e7eef6; }
+.layer-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; min-height:38px; padding:6px 12px; border-top:1px solid var(--line); }
+.layer-group { display:flex; flex-wrap:wrap; gap:3px 10px; }
+.layer-group label,.explode-control { display:flex; align-items:center; gap:4px; color:var(--muted); font-size:11px; white-space:nowrap; }
+.layer-group input { accent-color:var(--mint); margin:0; }
+.explode-control { margin-left:auto; }
+.explode-control input { width:72px; }
+.stage-plate:fullscreen,.stage-plate.viewer-full { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; max-width:none; background:var(--sheet); }
+.stage-plate:fullscreen .assembly-stage,.stage-plate.viewer-full .assembly-stage { height:auto; }
+.stage-plate.viewer-full { position:fixed; z-index:4; inset:0; }
+.tool-panel { margin-top:20px; }
+.tool-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+.tool-columns > * { min-width:0; }
+.compact-fields { max-width:550px; }
+.protocol-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.mini-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0; }
+.mini-stats > div { padding:8px; min-width:0; border:1px solid var(--line); border-radius:5px; background:#f5f7fc; }
+.mini-stats dt { color:var(--muted); font-size:11px; }
+.mini-stats output { display:block; color:var(--mint-dark); margin-top:3px; font-size:15px; overflow-wrap:anywhere; }
+[data-warning] { color:var(--peak); font-weight:600; }
+.sequence { display:flex; flex-wrap:wrap; gap:6px; max-height:143px; margin:8px 0; overflow:auto; }
+.bolt-pair { display:inline-flex; padding:2px; gap:2px; background:#e8eef8; border-radius:4px; }
+.bolt-pair .button { min-width:27px; min-height:25px; padding:1px 4px; font-size:11px; font-family:var(--mono); }
+.line-chart { width:100%; height:205px; margin:9px 0; border:1px solid var(--line); border-radius:6px; background:var(--plot); }
+.archive-pair { margin:10px 0; }
+.archive-pair figure .fields { margin-bottom:8px; }
+.archive-pair img { display:block; width:100%; height:clamp(140px,23vw,325px); object-fit:contain; background:#29384d; border-radius:5px; }
+.archive-pair figcaption { padding-top:4px; overflow-wrap:anywhere; }
+.delta-table { margin-top:8px; overflow:auto; }
+#delta-note { margin-top:9px; }
+#trace-note { overflow-wrap:anywhere; }
+@media (max-width:880px) { .workflow a[aria-current="page"] { box-shadow:inset 0 -2px #abc4ff; } }
+@media (max-width:640px) {
+  .work-head h1 { font-size:36px; }
+  .assembly-stage { height:300px; }
+  .stage-tools { right:6px; bottom:6px; gap:3px; }
+  .stage-info { left:8px; top:8px; }
+  .layer-bar { gap:4px 7px; padding:5px 8px; }
+  .tool-columns { grid-template-columns:minmax(0,1fr); gap:13px; }
+  .mini-stats { gap:4px; }
+  .mini-stats > div { padding:5px; }
+  .mini-stats output { font-size:13px; }
+  .layer-group { gap:3px 6px; }
+  .explode-control { margin-left:0; }
+}
 </style>
 </head>
 <body>
@@ -300,24 +403,51 @@ dialog .plate-head { padding: 12px; }
   <main class="main" id="main" tabindex="-1">
     <section class="workspace" id="assembly" aria-labelledby="assembly-page">
       <header class="work-head">
-        <div><p class="stamp">01 / GEOMETRY</p><h1 id="assembly-page" tabindex="-1">孔位设计</h1><p>设置水腔和螺栓孔圈，在图纸上核对选孔与间距。</p></div>
+        <div><p class="stamp">01 / GEOMETRY</p><h1 id="assembly-page" tabindex="-1">孔位设计</h1><p>检查水腔、法兰与孔圈，在三维视口核对孔位和安装净距。</p></div>
         <a class="button primary" href="#stress">进入应力实验室 <span aria-hidden="true">→</span></a>
       </header>
       <div class="bench layout-bench">
         <div>
-          <figure class="plate">
+          <figure class="plate stage-plate" id="assembly-plate">
             <div class="plate-head">
-              <h2>加载面装配图</h2>
-              <div class="group" aria-label="装配视角"><button type="button" class="button" data-view="iso" aria-pressed="true">轴测图</button><button type="button" class="button" data-view="plan" aria-pressed="false">正视图</button></div>
+              <h2>装配视口</h2>
+              <div class="group" aria-label="三维视角预设">
+                <button type="button" class="button" data-view="iso" aria-pressed="true">轴测</button>
+                <button type="button" class="button" data-view="plan" aria-pressed="false">俯视</button>
+                <button type="button" class="button" data-view="bottom" aria-pressed="false">底视</button>
+              </div>
             </div>
-            <div class="canvas-wrap"><canvas id="assembly-canvas" role="img" aria-label="加载面装配示意图"></canvas></div>
+            <div class="assembly-stage" id="assembly-stage" tabindex="0" role="group" aria-label="三维装配视口" aria-describedby="viewer-help">
+              <canvas id="assembly-canvas" aria-hidden="true"></canvas>
+              <canvas id="assembly-fallback" aria-hidden="true" hidden></canvas>
+              <canvas id="axis-widget" width="76" height="62" aria-hidden="true"></canvas>
+              <div class="stage-info"><span class="spec">加载面 / mm</span></div>
+              <span id="selected-bolt-label" class="bolt-tag" hidden></span>
+              <p class="viewer-empty" id="viewer-empty" hidden>请填写有效的设计参数。</p>
+              <div class="stage-tools" aria-label="视口操作">
+                <button type="button" class="button" id="viewer-zoom-out" aria-label="缩小" title="缩小">−</button>
+                <button type="button" class="button" id="viewer-zoom-in" aria-label="放大" title="放大">+</button>
+                <button type="button" class="button" id="viewer-reset" title="重置视口">复位</button>
+                <button type="button" class="button" id="viewer-expand" aria-pressed="false" title="切换全屏">全屏</button>
+              </div>
+            </div>
+            <div class="layer-bar">
+              <div class="layer-group" aria-label="模型图层">
+                <label><input type="checkbox" id="layer-plate" checked>试件</label>
+                <label><input type="checkbox" id="layer-flange" checked>法兰</label>
+                <label><input type="checkbox" id="layer-water" checked>水腔</label>
+                <label><input type="checkbox" id="layer-bolts" checked>螺栓及孔</label>
+              </div>
+              <label class="explode-control">爆炸视图<input type="range" id="explode" min="0" max="100" value="0"><output id="explode-value">0%</output></label>
+            </div>
             <figcaption class="plate-foot">
               <div class="plot-legend">
                 <span class="key"><i class="swatch bolt" aria-hidden="true"></i>选用螺栓</span>
                 <span class="key"><i class="swatch candidate" aria-hidden="true"></i>备选孔</span>
                 <span class="key"><i class="swatch water" aria-hidden="true"></i>水腔</span>
               </div>
-              <span class="spec" id="view-caption">轴测图</span>
+              <span class="spec" id="view-caption">轴测</span>
+              <span class="key viewer-help" id="viewer-help">拖拽旋转 · 滚轮或捏合缩放 · Shift 拖拽平移 · 方向键可旋转</span>
             </figcaption>
           </figure>
           <dl class="metrics" aria-label="水腔与孔圈指标">
@@ -395,6 +525,25 @@ dialog .plate-head { padding: 12px; }
           <p class="note compare-note">偏置对照将一个孔移到相邻空孔，模拟局部错位。间距变异系数为无量纲比值。</p>
         </section>
       </div>
+      <section class="sheet tool-panel" aria-labelledby="install-title">
+        <div class="section-head"><h2 id="install-title">安装净距与交叉顺序</h2><button class="button" type="button" id="export-sequence">下载顺序 CSV ↓</button></div>
+        <div class="tool-columns">
+          <div>
+            <div class="fields compact-fields">
+              <label class="field">螺栓外径 mm<input id="bolt-diameter" type="number" min="1" max="200" step="any" value="45" required></label>
+              <label class="field">自定最小净距 mm<input id="min-clearance" type="number" min="0" max="200" step="any" value="10" required></label>
+            </div>
+            <dl class="mini-stats"><div><dt>最短中心距</dt><dd><output id="closest-distance">—</output></dd></div><div><dt>对应净距</dt><dd><output id="clearance-result">—</output></dd></div></dl>
+            <p id="clearance-note" class="note" role="status"></p>
+            <p class="note">净距按输入的外径估算，未计套筒、垫圈和施工余量。默认外径来自项目 Abaqus 算例，可按实物修改。</p>
+          </div>
+          <div>
+            <h3>对边配对 · 点击定位孔</h3>
+            <div id="bolt-sequence" class="sequence" aria-label="交叉安装顺序"></div>
+            <p class="note">按孔位几何生成核对顺序。现场紧固顺序与扭矩以批准的工艺为准。</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section class="workspace" id="stress" aria-labelledby="stress-page" hidden>
@@ -440,6 +589,14 @@ dialog .plate-head { padding: 12px; }
           <thead><tr><th scope="col">深度 / 每孔力</th><th scope="col">5 kN</th><th scope="col">10 kN</th><th scope="col">20 kN</th></tr></thead>
           <tbody id="sweep-rows"></tbody>
         </table>
+      </section>
+      <section class="sheet tool-panel" aria-labelledby="profile-title">
+        <div class="section-head">
+          <h2 id="profile-title">截面应力剖线</h2>
+          <div class="group" aria-label="剖线方向"><button class="button" type="button" data-profile="x" aria-pressed="true">沿 X</button><button class="button" type="button" data-profile="y" aria-pressed="false">沿 Y</button><button class="button" id="export-profile" type="button">下载 CSV ↓</button></div>
+        </div>
+        <p id="profile-note" class="note">剖线穿过当前应力探针。无探针时取中心截面。</p>
+        <canvas class="line-chart" id="profile-chart" role="img" aria-label="截面应力剖线"></canvas>
       </section>
     </section>
 
@@ -489,6 +646,29 @@ dialog .plate-head { padding: 12px; }
           <table><thead><tr><th scope="col">作业编号</th><th scope="col">工况</th><th scope="col">状态</th><th scope="col">更新时间</th><th scope="col">结果</th></tr></thead><tbody id="job-rows"></tbody></table>
         </div>
       </section>
+      <div class="tool-columns tool-panel">
+        <section class="sheet" aria-labelledby="protocol-title">
+          <div class="section-head"><h2 id="protocol-title">水压试验计划</h2><button class="button" type="button" id="export-protocol">导出计划 CSV ↓</button></div>
+          <div class="fields protocol-fields">
+            <label class="field">升压时长 s<input type="number" id="ramp-seconds" min="1" max="86400" value="60" step="any" required></label>
+            <label class="field">保压时长 s<input type="number" id="hold-seconds" min="1" max="86400" value="120" step="any" required></label>
+            <label class="field">卸压时长 s<input type="number" id="release-seconds" min="1" max="86400" value="60" step="any" required></label>
+          </div>
+          <canvas class="line-chart" id="protocol-chart" role="img" aria-label="升压、保压和卸压的三段时间曲线"></canvas>
+          <p class="note" id="protocol-note"></p>
+          <p class="note">时长为可编辑演示值。计划与试验复盘联动，不下发到 PLC，也不改变 Abaqus 的静力载荷步。</p>
+        </section>
+        <section class="sheet" aria-labelledby="preflight-title">
+          <div class="section-head"><h2 id="preflight-title">提交前网格核查</h2><button class="button" type="button" id="run-preflight">检查当前模型</button></div>
+          <dl class="mini-stats preflight-stats">
+            <div><dt>估计实体单元</dt><dd><output id="preflight-elements">—</output></dd></div>
+            <div><dt>受压面片</dt><dd><output id="preflight-faces">—</output></dd></div>
+            <div><dt>水压合力</dt><dd><output id="preflight-thrust">—</output></dd></div>
+          </dl>
+          <p class="note" id="preflight-note" role="status">检查当前孔位、几何与目标网格尺寸，可在没有 Abaqus 时运行。</p>
+          <p class="note">估计值用于识别网格过密，未检查材料、接触或模型的物理有效性。</p>
+        </section>
+      </div>
     </section>
 
     <section class="workspace" id="history" aria-labelledby="history-page" hidden>
@@ -528,6 +708,35 @@ dialog .plate-head { padding: 12px; }
           </section>
         </aside>
       </div>
+      <section class="sheet tool-panel" aria-labelledby="archive-compare-title">
+        <div class="section-head"><h2 id="archive-compare-title">历史云图并排核对</h2><button class="button" type="button" id="toggle-archive-compare" aria-expanded="false" aria-controls="archive-compare">展开对照</button></div>
+        <div id="archive-compare" hidden>
+          <div class="tool-columns archive-pair">
+            <figure>
+              <div class="fields"><label class="field">左图算例<select id="paired-left"></select></label><label class="field">部件<select id="paired-part"><option value="concrete">混凝土</option><option value="tank">水箱</option></select></label></div>
+              <img id="paired-image-left" alt="左侧历史 S33 云图"><figcaption class="spec" id="paired-caption-left"></figcaption>
+            </figure>
+            <figure>
+              <div class="fields"><label class="field">右图算例<select id="paired-right"></select></label></div>
+              <img id="paired-image-right" alt="右侧历史 S33 云图"><figcaption class="spec" id="paired-caption-right"></figcaption>
+            </figure>
+          </div>
+          <p class="note">原图色标独立。请对照标注的数值与单位读取，不直接用颜色判断应力高低。</p>
+        </div>
+      </section>
+      <section class="sheet tool-panel" aria-labelledby="replay-title">
+        <div class="section-head">
+          <h2 id="replay-title">压力采集回放</h2>
+          <div class="group"><button class="button" id="trace-template" type="button">下载 CSV 示例</button><button class="button primary" id="choose-trace" type="button">导入采集 CSV ↑</button></div>
+        </div>
+        <input type="file" id="trace-file" accept=".csv,text/csv" hidden>
+        <p class="note" id="trace-note" role="status">支持采集文件 t_s,pressure_mpa。时间以试验起始为 0，严格递增。导入后可叠加当前水压计划。</p>
+        <div id="trace-results" hidden>
+          <canvas class="line-chart" id="trace-chart" role="img" aria-label="实测水压和计划水压随时间变化"></canvas>
+          <dl class="mini-stats"><div><dt>实测最高压力</dt><dd><output id="trace-max">—</output></dd></div><div><dt>保压段末－初</dt><dd><output id="trace-delta">—</output></dd></div><div><dt>采集点</dt><dd><output id="trace-count">—</output></dd></div></dl>
+          <p class="note">保压段的两端在实测曲线上线性插值。以实测时间覆盖为前提，变化量本身不能判定泄漏原因。</p>
+        </div>
+      </section>
     </section>
 
     <section class="workspace" id="scenarios" aria-labelledby="scenarios-page" hidden>
@@ -553,6 +762,15 @@ dialog .plate-head { padding: 12px; }
           <p class="note" id="snapshot-message" role="status"></p>
         </section>
       </div>
+      <section class="sheet tool-panel" aria-labelledby="delta-title">
+        <div class="section-head"><h2 id="delta-title">工况差异与试验交接</h2><button class="button" id="export-handoff" type="button">导出当前工况单 ↓</button></div>
+        <div class="fields compact-fields">
+          <label class="field">基准工况<select id="delta-base"></select></label>
+          <label class="field">对照工况<select id="delta-compare"></select></label>
+        </div>
+        <p class="note" id="delta-note" role="status">先保存或导入快照，即可逐项对比参数。</p>
+        <div class="delta-table" id="delta-table" hidden><table><thead><tr><th scope="col">参数</th><th scope="col">基准</th><th scope="col">对照</th><th scope="col">差异</th></tr></thead><tbody id="delta-rows"></tbody></table></div>
+      </section>
     </section>
   </main>
 </div>
@@ -582,8 +800,8 @@ const mono = color('mono');
 const theme = {
   plot: color('plot'), mint: color('mint'), peak: color('peak'),
   ink: color('text'), muted: color('muted'), quiet: color('quiet'),
-  dimension: '#687e75', water: '#4b806d',
-  outline: '#6c837a',
+  dimension: '#7d8da7',
+  outline: '#8191ab',
 };
 
 // 候选孔索引从 0 开始，沿给定的下、右、上、左四条边编号。
@@ -832,12 +1050,12 @@ function plotText(context, text, x, y, { size = 12, fill = theme.muted, align = 
   context.restore();
 }
 
-function drawAssemblyGrid(context, width, height) {
+function drawPlotGrid(context, width, height) {
   const minor = 20;
   for (let x = (width / 2) % minor; x < width; x += minor) {
     for (let y = (height / 2) % minor; y < height; y += minor) {
       context.fillStyle = Math.abs(x - width / 2) % 100 < 1 && Math.abs(y - height / 2) % 100 < 1
-        ? '#a7b4a3' : '#d7ddd0';
+        ? '#b7c4dd' : '#dce4f1';
       context.fillRect(x, y, 1.15, 1.15);
     }
   }
@@ -849,195 +1067,454 @@ function drawAssemblyGrid(context, width, height) {
   }
 }
 
-function drawSlab(context, project, length, width, topZ, bottomZ, palette, isometric) {
-  const top = rectangle(length, width, topZ);
-  if (isometric) {
-    const bottom = rectangle(length, width, bottomZ);
-    path(context, [top[2], top[3], bottom[3], bottom[2]].map(project), { fill: palette.front, stroke: palette.edge });
-    path(context, [top[1], top[2], bottom[2], bottom[1]].map(project), { fill: palette.side, stroke: palette.edge });
-  }
-  path(context, top.map(project), { fill: palette.top, stroke: palette.edge, line: 1.2 });
-}
-
-function drawWater(context, project, length, width, z) {
-  const boundary = rectangle(length, width, z).map(project);
-  path(context, boundary, { fill: '#c1d8cc' });
-
-  context.save();
-  context.beginPath();
-  boundary.forEach(([x, y], index) => index ? context.lineTo(x, y) : context.moveTo(x, y));
-  context.closePath();
-  context.clip();
-  for (let row = 0; row < 6; row++) {
-    const middle = (row / 5 - 0.5) * width * 0.78;
-    const wave = Array.from({ length: 41 }, (_, i) => {
-      const t = i / 40;
-      return project([(t - 0.5) * length, middle + Math.sin(t * Math.PI * 7 + row * 0.7) * width * 0.014, z]);
-    });
-    path(context, wave, { stroke: 'rgba(43,112,88,0.37)', line: 0.85, close: false });
-  }
-  context.restore();
-  path(context, boundary, { stroke: theme.water, line: 1.3 });
-
-  const [labelX, labelY] = project([0, 0, z]);
-  const label = '水压加载区';
-  context.save();
-  context.font = '600 13px ' + color('font');
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  const labelWidth = context.measureText(label).width + 20;
-  context.fillStyle = 'rgba(245,248,234,0.86)';
-  context.fillRect(labelX - labelWidth / 2, labelY - 12, labelWidth, 24);
-  context.fillStyle = theme.ink;
-  context.fillText(label, labelX, labelY);
-  context.restore();
-}
-
-function drawBolt(context, project, x, y, z, radius, focused, isometric) {
-  const head = Array.from({ length: 6 }, (_, index) => {
-    const angle = index * Math.PI / 3;
-    return project([x + radius * Math.cos(angle), y + radius * Math.sin(angle), z]);
-  });
-  if (isometric) {
-    const foot = head.map(([px, py]) => [px, py + 1.5]);
-    path(context, foot, { fill: '#75432f' });
-  }
-  path(context, head, { fill: theme.peak, stroke: '#753820', line: 0.65 });
-
-  if (focused) {
-    const [cx, cy] = project([x, y, z]);
-    const halo = head.map(([px, py]) => [cx + (px - cx) * 1.65, cy + (py - cy) * 1.65]);
-    path(context, halo, { stroke: '#9b3b20', line: 1.05 });
-  }
-}
-
-let clickableHoles = [];
-function renderAssembly(model, layout) {
-  const canvas = $('assembly-canvas');
-  const { context, width, height } = prepareCanvas(canvas);
-  if (width < 80 || height < 100) return;
-  drawAssemblyGrid(context, width, height);
-
-  const iso = state.view === 'iso';
-  const shortSide = Math.min(model.ringL, model.ringW);
-  const flangeLip = Math.min(48, Math.max(15, shortSide * 0.045));
-  const edgePad = Math.min(94, Math.max(30, shortSide * 0.09));
-  const flangeL = model.ringL + 2 * flangeLip;
-  const flangeW = model.ringW + 2 * flangeLip;
-  const concreteL = flangeL + 2 * edgePad;
-  const concreteW = flangeW + 2 * edgePad;
-  const thickness = Math.min(150, Math.max(34, shortSide * 0.15));
-  const flangeTop = Math.min(32, Math.max(9, shortSide * 0.03));
-
-  const toPlane = (x, y, z) => iso
-    ? [0.87 * x + 0.5 * y, 0.31 * x - 0.53 * y - z]
-    : [x, -y];
-  const envelope = [
-    ...rectangle(concreteL, concreteW),
-    ...rectangle(concreteL, concreteW, -thickness),
-    ...rectangle(flangeL, flangeW, flangeTop),
-  ].map(point => toPlane(...point));
-  const horizontal = envelope.map(([x]) => x);
-  const vertical = envelope.map(([, y]) => y);
-  const left = Math.min(...horizontal);
-  const top = Math.min(...vertical);
-  const spanX = Math.max(...horizontal) - left;
-  const spanY = Math.max(...vertical) - top;
-  const scale = Math.min((width - 40) / spanX, (height - 104) / spanY);
-  const originX = (width - spanX * scale) / 2;
-  const originY = (height - spanY * scale) / 2 - 3;
-
-  const project = ([x, y, z = 0]) => {
-    const [u, v] = toPlane(x, y, z);
-    return [originX + (u - left) * scale, originY + (v - top) * scale];
+const viewer = (() => {
+  const stage = $('assembly-stage');
+  const surface = $('assembly-canvas');
+  const fallback = $('assembly-fallback');
+  const dimensions = () => stage.getBoundingClientRect();
+  const positionLabel = $('selected-bolt-label');
+  const defaultCamera = [0.76, -1.04, 0.94];
+  const viewAxes = {
+    iso: defaultCamera, plan: [0, 0, 1], bottom: [0, 0, -1],
   };
+  const names = { iso: '轴测', plan: '俯视', bottom: '底视' };
+  const cross = (a, b) => [a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]];
+  const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  const length = a => Math.hypot(...a);
+  const unit = a => a.map(v => v / length(a));
+  const sub = (a, b) => a.map((v, i) => v - b[i]);
+  const blend = (a, b, p, q) => a.map((v, i) => v*p + b[i]*q);
+  let right, up, back, perspective, free, zoom, pan, fitted, lastWidth, lastHeight;
+  let mesh, meshKey, fitKey, hits = [];
+  let gpu = createGpu();
 
-  drawSlab(context, project, concreteL, concreteW, 0, -thickness, {
-    top: '#e9e9da', front: '#c5cbbd', side: '#d8ddce', edge: '#718477',
-  }, iso);
-  drawSlab(context, project, flangeL, flangeW, flangeTop, 0, {
-    top: '#d5e2d7', front: '#a3b7a7', side: '#bbcdbf', edge: '#527467',
-  }, iso);
-  path(context, rectangle(model.ringL, model.ringW, flangeTop).map(project), {
-    stroke: '#76968a', dash: [3, 5], line: 0.9,
+  function createGpu() {
+    const gl = surface.getContext('webgl', { alpha: true, antialias: true });
+    if (!gl) return null;
+    const program = gl.createProgram();
+    const shaders = [
+      [gl.VERTEX_SHADER, `
+        attribute vec3 aPoint;
+        attribute vec3 aColor;
+        uniform vec3 uRight, uUp, uBack;
+        uniform vec2 uPan;
+        uniform float uAspect, uZoom, uPerspective;
+        varying vec3 vColor;
+        void main() {
+          vec3 p = vec3(dot(aPoint,uRight),dot(aPoint,uUp),dot(aPoint,uBack));
+          float w = mix(1.0, 2.8 - p.z, uPerspective);
+          float scale = uZoom * mix(1.0, 2.8, uPerspective);
+          gl_Position = vec4(p.x*scale/uAspect + uPan.x*w,
+            p.y*scale + uPan.y*w, -p.z*0.8, w);
+          vColor = aColor;
+        }`],
+      [gl.FRAGMENT_SHADER, `
+        precision mediump float;
+        varying vec3 vColor;
+        void main() { gl_FragColor = vec4(vColor,1.0); }`],
+    ];
+    for (const [type, source] of shaders) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return null;
+      gl.attachShader(program, shader);
+      gl.deleteShader(shader);
+    }
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+    const uniforms = Object.fromEntries(['Right','Up','Back','Pan','Aspect','Zoom','Perspective']
+      .map(name => [name, gl.getUniformLocation(program, 'u' + name)]));
+    return { gl, program, uniforms, buffer: gl.createBuffer(),
+      point: gl.getAttribLocation(program, 'aPoint'), color: gl.getAttribLocation(program, 'aColor'), source: null };
+  }
+
+  surface.addEventListener('webglcontextlost', event => {
+    event.preventDefault();
+    gpu = null;
+    queuePaint();
   });
-  drawWater(context, project, model.length, model.width, flangeTop);
+  surface.addEventListener('webglcontextrestored', () => { gpu = createGpu(); queuePaint(); });
 
-  // 先画整圈灰孔，再将同一坐标系中的入选孔覆盖为六边形螺栓。
-  const projected = model.points.map(([x, y]) => project([x, y, flangeTop]));
-  const candidatePitch = Math.min(...projected.map(([x, y], i) => {
-    const [nextX, nextY] = projected[(i + 1) % projected.length];
-    return Math.hypot(nextX - x, nextY - y);
-  }));
-  const holeRadius = Math.min(2.3, Math.max(0.65, candidatePitch * 0.18));
-  context.fillStyle = '#657977';
-  for (const [x, y] of projected) {
-    context.beginPath();
-    context.arc(x, y, holeRadius, 0, Math.PI * 2);
-    context.fill();
+  function snap(view, paint = true) {
+    back = unit(viewAxes[view] ?? defaultCamera);
+    right = Math.abs(back[2]) === 1 ? [1, 0, 0] : unit(cross([0, 0, 1], back));
+    up = cross(back, right);
+    perspective = view === 'iso';
+    zoom = 1;
+    pan = [0, view === 'iso' ? .055 : 0];
+    free = false;
+    fitted = null;
+    if (paint) queuePaint();
+  }
+  snap('iso', false);
+
+  function drag(dx, dy) {
+    const horizontal = dx / 155, vertical = dy / 155;
+    [right, back] = [blend(right, back, Math.cos(horizontal), -Math.sin(horizontal)),
+      blend(back, right, Math.cos(horizontal), Math.sin(horizontal))];
+    [up, back] = [blend(up, back, Math.cos(vertical), -Math.sin(vertical)),
+      blend(back, up, Math.cos(vertical), Math.sin(vertical))];
+    free = true;
+    queuePaint();
   }
 
-  clickableHoles = layout.holes.map(hole => projected[hole.id]);
-  const selected = layout.holes[state.hole];
-  const closestGap = Math.min(...layout.gaps);
-  // 以周向间距约束标记大小，孔位坐标不随屏幕尺寸改变。
-  const boltRadius = Math.min(7 / scale, Math.max(1 / scale, closestGap * 0.22));
-  for (const [index, hole] of layout.holes.entries()) {
-    drawBolt(context, project, hole.x, hole.y, flangeTop, boltRadius, index === state.hole, iso);
+  function move(dx, dy, width, height) {
+    pan = [pan[0] + 2*dx/width, pan[1] - 2*dy/height].map(n => Math.max(-2, Math.min(2, n)));
+    queuePaint();
   }
 
-  const [px, py] = clickableHoles[state.hole];
-  const labelX = Math.max(20, Math.min(width - 20, px));
-  const labelY = Math.max(30, py - 20);
-  context.fillStyle = theme.plot;
-  context.fillRect(labelX - 17, labelY - 9, 34, 18);
-  plotText(context, holeId(selected.id), labelX, labelY, { fill: theme.peak, align: 'center', size: 11 });
-  plotText(context, iso ? 'ISOMETRIC / mm' : 'PLAN / mm', 24, 23, { size: 11 });
-  plotText(context, '孔 ' + holeId(selected.id) + '   ' + decimal(selected.x) + ' / ' + decimal(selected.y), width - 24, 23, {
-    fill: theme.peak, align: 'right', size: 11,
-  });
-
-  const axis = [26, height - 25];
-  const xEnd = [axis[0] + 22, axis[1] + (iso ? 7 : 0)];
-  const yEnd = [axis[0] + (iso ? 11 : 0), axis[1] - 22];
-  path(context, [xEnd, axis, yEnd], { stroke: theme.dimension, close: false });
-  plotText(context, 'X', xEnd[0] + 7, xEnd[1], { size: 11 });
-  plotText(context, 'Y', yEnd[0] - 3, yEnd[1] - 7, { size: 11 });
-
-  if (iso && width > 400) {
-    const [lx, ly] = project([-model.length / 2, model.width / 2, flangeTop]);
-    const tail = Math.max(31, lx - 79);
-    const endY = Math.max(60, ly - 22);
-    path(context, [[lx, ly], [lx - 19, endY], [tail, endY]], { stroke: theme.dimension, close: false });
-    plotText(context, '水腔边界', tail, endY - 11, { size: 10 });
+  function magnify(factor) {
+    zoom = Math.max(.40, Math.min(6, zoom * factor));
+    queuePaint();
   }
 
-  if (!iso) {
-    const y = height - 44;
-    const x1 = project([-model.ringL / 2, 0])[0];
-    const x2 = project([model.ringL / 2, 0])[0];
-    path(context, [[x1, y - 5], [x1, y], [x2, y], [x2, y - 5]], { stroke: theme.dimension, close: false });
-    plotText(context, decimal(model.ringL) + ' mm', (x1 + x2) / 2, y + 12, { align: 'center', size: 11 });
-    const x = x2 + 12;
-    if (x + 18 < width) {
-      const y1 = project([0, model.ringW / 2])[1];
-      const y2 = project([0, -model.ringW / 2])[1];
-      path(context, [[x - 4, y1], [x, y1], [x, y2], [x - 4, y2]], { stroke: theme.dimension, close: false });
-      context.save();
-      context.translate(x + 11, (y1 + y2) / 2);
-      context.rotate(-Math.PI / 2);
-      plotText(context, decimal(model.ringW) + ' mm', 0, 0, { align: 'center', size: 11 });
-      context.restore();
+  function makeScene(model, layout, settings) {
+    const { thickness, lip, edge, flangeT, diameter, explosion } = settings;
+    const flangeL = model.ringL + lip * 2, flangeW = model.ringW + lip * 2;
+    const plateL = flangeL + edge * 2, plateW = flangeW + edge * 2;
+    const spread = Math.min(model.ringL, model.ringW) * .26 * explosion;
+    const boltRadius = diameter / 2;
+    const boltTop = flangeT + 2*spread + diameter * .38;
+    const waterZ = flangeT * .58 + spread * 1.45;
+    const extentL = Math.max(plateL, model.ringL + diameter), extentW = Math.max(plateW, model.ringW + diameter);
+    const extent = Math.max(extentL, extentW, thickness + boltTop, 1);
+    const centerZ = (boltTop - thickness) / 2;
+    const norm = ([x,y,z]) => [x/extent, y/extent, (z-centerZ)/extent];
+    const faces = [], lines = [];
+    const light = unit([-3,-4,7]);
+    const palette = {
+      plate: [.56,.61,.70], flange: [.28,.37,.51], water: [.14,.40,.69],
+      bolt: [.82,.59,.34], wire: [.52,.63,.80],
+    };
+    function face(points, base) {
+      const normal = cross(sub(points[1],points[0]),sub(points[2],points[0]));
+      if (length(normal) < 1e-12) return;
+      const lighting = .53 + .47 * Math.max(0,dot(unit(normal),light));
+      faces.push({ points: points.map(norm), color: base.map(v => Math.min(1, v*lighting + .06)) });
+    }
+    function wire(points, tint = palette.wire) {
+      for (let i = 1; i < points.length; i++) lines.push({ points: [norm(points[i-1]), norm(points[i])], color: tint });
+    }
+    function ring(lower, upper, tint) {
+      for (let i = 0; i < lower.length; i++) {
+        const j = (i+1) % lower.length;
+        face([lower[i],lower[j],upper[j],upper[i]], tint);
+      }
+    }
+    function prism(makeLoop, levels, tint) {
+      const loops = levels.map(([z,scale]) => makeLoop(z,scale));
+      for (let i = 1; i < loops.length; i++) ring(loops[i-1],loops[i],tint);
+      face(loops[0].slice().reverse(),tint);
+      face(loops[loops.length-1],tint);
+    }
+    const rect = (x,y,z) => rectangle(x,y,z).reverse();
+    const slabBevel = Math.min(thickness*.08, Math.min(plateL,plateW)*.016);
+    if (settings.plate) {
+      prism((z,s) => rect(plateL-2*s,plateW-2*s,z),
+        [[-thickness,slabBevel],[-thickness+slabBevel,0],[-slabBevel,0],[0,slabBevel]],palette.plate);
+    }
+    if (settings.flange) {
+      const outer = [rect(flangeL,flangeW,spread),rect(flangeL,flangeW,spread+flangeT)];
+      const inner = [rect(model.length,model.width,spread),rect(model.length,model.width,spread+flangeT)];
+      ring(outer[0],outer[1],palette.flange);
+      ring(inner[0].slice().reverse(),inner[1].slice().reverse(),palette.flange);
+      for (const boundary of [outer[1],inner[1]]) {
+        const edgeLine = boundary.map(([x,y,z]) => [x,y,z+extent*.00025]);
+        wire([...edgeLine,edgeLine[0]],[.45,.56,.71]);
+      }
+      for (let i = 0; i < 4; i++) {
+        const j = (i+1) % 4;
+        face([outer[1][i],outer[1][j],inner[1][j],inner[1][i]],palette.flange);
+        face([inner[0][i],inner[0][j],outer[0][j],outer[0][i]],palette.flange);
+      }
+    }
+    if (settings.water) {
+      const waterDepth = Math.min(flangeT*.50, model.width*.07);
+      prism((z) => rect(model.length*.985,model.width*.980,z),
+        [[waterZ-waterDepth,0],[waterZ,0]],palette.water);
+      for (let row = 1; row <= 8; row++) {
+        const wave = Array.from({ length: 31 }, (_, i) => {
+          const t = i / 30;
+          return [model.length*(t - .5)*.94,
+            model.width*((row/9 - .5)*.88 + Math.sin(t*29 + row*.43)*.008),
+            waterZ + extent*.0004];
+        });
+        wire(wave,[.42,.70,.93]);
+      }
+    }
+    const anchors = [];
+    if (settings.bolts) {
+      const selected = new Map(layout.holes.map((hole,i) => [hole.id,i]));
+      const headBase = flangeT + 2*spread;
+      const circle = (x,y,z,r,sides) => Array.from({length:sides},(_,i) => {
+        const a = i*2*Math.PI/sides;
+        return [x+r*Math.cos(a),y+r*Math.sin(a),z];
+      });
+      for (const [[x,y],id] of model.points.map((value,id) => [value,id])) {
+        const order = selected.get(id);
+        if (order === undefined) {
+          if (!settings.flange) continue;
+          const radius = Math.min(5,Math.min(model.ringL,model.ringW)*.009);
+          const loop = circle(x,y,spread+flangeT+extent*.0012,radius,10);
+          wire([...loop,loop[0]],[.61,.69,.82]);
+          continue;
+        }
+        const cylinderTop = headBase + diameter*.10;
+        prism((z,s) => circle(x,y,z,s,8), [[headBase-diameter*.33,boltRadius*.54],
+          [cylinderTop,boltRadius*.54]],palette.flange);
+        const material = order === state.hole ? [1,.77,.44] : palette.bolt;
+        prism((z,s) => circle(x,y,z,s,6),
+          [[cylinderTop,boltRadius*.80],[cylinderTop+diameter*.035,boltRadius],
+            [boltTop-diameter*.055,boltRadius],[boltTop,boltRadius*.78]],material);
+        anchors.push({ index: order, point: norm([x,y,boltTop+extent*.001]) });
+      }
+    }
+    return {
+      faces, lines, anchors,
+      bounds: [-thickness,boltTop].flatMap(z => rect(extentL,extentW,z)).map(norm),
+    };
+  }
+
+  function toNdc(point, aspect, scale) {
+    const depth = dot(point,back);
+    const w = perspective ? 2.8-depth : 1;
+    const f = scale * (perspective ? 2.8 : 1) / w;
+    return [dot(point,right)*f/aspect, dot(point,up)*f, depth];
+  }
+
+  function fit(aspect) {
+    let x = 0, y = 0;
+    for (const point of mesh.bounds) {
+      const [u,v] = toNdc(point,aspect,1);
+      x = Math.max(x,Math.abs(u));
+      y = Math.max(y,Math.abs(v));
+    }
+    return 1 / Math.max(x/.84, y/.81, 1e-8);
+  }
+
+  function project(point, width, height) {
+    const [x,y,depth] = toNdc(point,width/height,fitted*zoom);
+    return [(1+x+pan[0])*width/2,(1-y-pan[1])*height/2,depth];
+  }
+
+  function paintGpu(width, height) {
+    const {gl,program,uniforms,buffer,point,color} = gpu;
+    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    if (surface.width !== Math.round(width*scale) || surface.height !== Math.round(height*scale)) {
+      surface.width = Math.round(width*scale);
+      surface.height = Math.round(height*scale);
+    }
+    gl.viewport(0,0,surface.width,surface.height);
+    gl.clearColor(0,0,0,0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.useProgram(program);
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    if (gpu.source !== mesh) {
+      const vertices = [];
+      for (const item of mesh.faces) {
+        for (let i = 1; i < item.points.length - 1; i++) {
+          for (const p of [item.points[0],item.points[i],item.points[i+1]]) vertices.push(...p,...item.color);
+        }
+      }
+      gpu.faces = vertices.length / 6;
+      for (const item of mesh.lines) for (const p of item.points) vertices.push(...p,...item.color);
+      gpu.lines = vertices.length / 6 - gpu.faces;
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+      gpu.source = mesh;
+    }
+    gl.enableVertexAttribArray(point);
+    gl.enableVertexAttribArray(color);
+    gl.vertexAttribPointer(point,3,gl.FLOAT,false,24,0);
+    gl.vertexAttribPointer(color,3,gl.FLOAT,false,24,12);
+    gl.uniform3fv(uniforms.Right,right);
+    gl.uniform3fv(uniforms.Up,up);
+    gl.uniform3fv(uniforms.Back,back);
+    gl.uniform2fv(uniforms.Pan,pan);
+    gl.uniform1f(uniforms.Aspect,width/height);
+    gl.uniform1f(uniforms.Zoom,fitted*zoom);
+    gl.uniform1f(uniforms.Perspective,Number(perspective));
+    gl.drawArrays(gl.TRIANGLES,0,gpu.faces);
+    gl.drawArrays(gl.LINES,gpu.faces,gpu.lines);
+  }
+
+  function paintCanvas(width, height) {
+    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    fallback.width = Math.round(width*scale);
+    fallback.height = Math.round(height*scale);
+    const ctx = fallback.getContext('2d');
+    ctx.setTransform(scale,0,0,scale,0,0);
+    const items = [...mesh.faces,...mesh.lines].map(({points,color}) => ({
+      vertices: points.map(p => project(p,width,height)), color: 'rgb(' + color.map(n => Math.round(n*255)).join(',') + ')',
+    }));
+    const depth = item => item.vertices.reduce((sum,point) => sum + point[2],0) / item.vertices.length;
+    items.sort((a,b) => depth(a) - depth(b));
+    for (const {vertices,color} of items) {
+      if (vertices.length === 2) path(ctx,vertices,{stroke:color,close:false});
+      else path(ctx,vertices,{fill:color});
     }
   }
 
-  const viewName = iso ? '轴测图' : '正视图';
-  $('view-caption').textContent = viewName + ' / ' + model.count + ' 根';
-  canvas.setAttribute('aria-label', '加载面' + viewName + '，显示混凝土板、法兰、水压加载区、' +
-    model.points.length + ' 个候选孔及 ' + model.count + ' 根选用螺栓，当前孔号 ' + holeId(selected.id) + '。');
-}
+  function paintAxes() {
+    const axes = $('axis-widget');
+    const ctx = axes.getContext('2d');
+    ctx.clearRect(0,0,axes.width,axes.height);
+    const origin = [31,30];
+    const vectors = [
+      [[1,0,0],'X','#df9b7e'],[[0,1,0],'Y','#81bb91'],[[0,0,1],'Z','#98baff'],
+    ].sort((a,b)=>dot(a[0],back)-dot(b[0],back));
+    for (const [axis,label,tint] of vectors) {
+      const x=dot(axis,right), y=-dot(axis,up);
+      const point=[origin[0]+17*x,origin[1]+17*y];
+      if (Math.hypot(x,y)<.13) continue;
+      path(ctx,[origin,point],{stroke:tint,line:1.4,close:false});
+      plotText(ctx,label,point[0]+6*x,point[1]+6*y,{size:10,fill:tint,align:'center'});
+    }
+  }
 
-// Boussinesq point force solution. Units of N and mm yield MPa.
+  function render(model, layout) {
+    $('viewer-empty').hidden = Boolean(model);
+    surface.hidden = !model || !gpu;
+    fallback.hidden = !model || Boolean(gpu);
+    positionLabel.hidden = true;
+    $('axis-widget').hidden = !model;
+    hits = [];
+    if (!model) return;
+    const { width, height } = dimensions();
+    if (width < 100 || height < 100) return;
+    const setting = (id, fallbackValue) => $(id).checkValidity() && Number.isFinite(readNumber(id)) ? readNumber(id) : fallbackValue;
+    const settings = {
+      thickness:setting('plate-thickness',500), flangeT:setting('flange-thickness',25),
+      lip:setting('flange-lip',25), edge:setting('plate-edge',100), diameter:setting('bolt-diameter',45),
+      explosion:readNumber('explode')/100, plate:$('layer-plate').checked, flange:$('layer-flange').checked,
+      water:$('layer-water').checked, bolts:$('layer-bolts').checked,
+    };
+    const shape = [model.length,model.width,model.ringL,model.ringW,settings.thickness,settings.flangeT,
+      settings.lip,settings.edge,settings.diameter,settings.explosion].join('|');
+    const key = [shape,readNumber('nx'),readNumber('ny'),layout.ids.join(','),state.hole,
+      settings.plate,settings.flange,settings.water,settings.bolts].join('|');
+    if (key !== meshKey) {
+      mesh = makeScene(model,layout,settings);
+      meshKey = key;
+    }
+    if (shape !== fitKey) {
+      fitted = null;
+      fitKey = shape;
+    }
+    if (!fitted || width !== lastWidth || height !== lastHeight) {
+      fitted = fit(width/height);
+      lastWidth = width;
+      lastHeight = height;
+    }
+    if (gpu) paintGpu(width,height);
+    else paintCanvas(width,height);
+    paintAxes();
+
+    if (back[2] > .05 || !settings.plate) hits = mesh.anchors.map(({point,index}) => ({index,pixel:project(point,width,height)}));
+    const active = hits.find(point => point.index === state.hole);
+    if (active && active.pixel[0] > 21 && active.pixel[0] < width-21 && active.pixel[1] > 33 && active.pixel[1] < height-8) {
+      const [x,y] = active.pixel;
+      positionLabel.style.left = x + 'px';
+      positionLabel.style.top = y + 'px';
+      positionLabel.textContent = '孔 ' + holeId(layout.holes[state.hole].id);
+      positionLabel.hidden = false;
+    }
+    const caption = free ? '自由旋转' : names[state.view];
+    $('view-caption').textContent = caption + ' · ' + model.count + ' 根';
+    applyAria(views,'view',free ? null : state.view);
+    stage.setAttribute('aria-label','三维装配视口，' + caption + '，' + model.count + ' 根螺栓');
+  }
+
+  const touch = new Map();
+  let moved = false, multitouch = false;
+  const separation = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
+  stage.addEventListener('pointerdown', event => {
+    if (event.target.closest('button, input, label')) return;
+    if (event.pointerType !== 'touch' && event.button !== 0 && event.button !== 1 && event.button !== 2) return;
+    if (!touch.size) {
+      moved = false;
+      multitouch = false;
+      stage.focus({ preventScroll:true });
+    } else multitouch = true;
+    touch.set(event.pointerId,{x:event.clientX,y:event.clientY,pan:event.button !== 0 || event.shiftKey});
+    stage.setPointerCapture(event.pointerId);
+    stage.classList.add('moving');
+  });
+  stage.addEventListener('pointermove', event => {
+    const prev = touch.get(event.pointerId);
+    if (!prev) return;
+    const {width,height} = dimensions();
+    const point = {...prev,x:event.clientX,y:event.clientY};
+    const dx = point.x-prev.x,dy = point.y-prev.y;
+    if (!dx && !dy) return;
+    moved = true;
+    touch.set(event.pointerId,point);
+    if (touch.size > 1) {
+      const other = [...touch.entries()].find(([id]) => id !== event.pointerId)[1];
+      magnify(separation(point,other) / Math.max(1,separation(prev,other)));
+      move(dx/2,dy/2,width,height);
+    } else if (point.pan || event.shiftKey) move(dx,dy,width,height);
+    else drag(dx,dy);
+  });
+  function finish(event) {
+    if (!touch.delete(event.pointerId)) return;
+    if (!touch.size) stage.classList.remove('moving');
+    if (event.type !== 'pointerup' || moved || multitouch || event.button !== 0 || !activeLayout) return;
+    const rect = dimensions();
+    const cursor = [event.clientX-rect.left,event.clientY-rect.top];
+    let best, distance = event.pointerType === 'touch' ? 21 : 15;
+    for (const hit of hits) {
+      const delta = Math.hypot(hit.pixel[0]-cursor[0],hit.pixel[1]-cursor[1]);
+      if (delta < distance) {
+        best = hit;
+        distance = delta;
+      }
+    }
+    if (best) selectHole(best.index,false);
+  }
+  for (const type of ['pointerup','pointercancel','lostpointercapture']) stage.addEventListener(type,finish);
+  stage.addEventListener('contextmenu',event => event.preventDefault());
+  stage.addEventListener('wheel',event => {
+    event.preventDefault();
+    magnify(Math.exp(-event.deltaY*(event.deltaMode === 0 ? .0014 : .035)));
+  },{passive:false});
+  stage.addEventListener('keydown',event => {
+    if (event.target !== stage) return;
+    const vectors = {ArrowLeft:[-13,0],ArrowRight:[13,0],ArrowUp:[0,-13],ArrowDown:[0,13]};
+    if (vectors[event.key]) {
+      const [x,y] = vectors[event.key], {width,height} = dimensions();
+      if (event.shiftKey) move(x,y,width,height);
+      else drag(x,y);
+    } else if (event.key === '+' || event.key === '=') magnify(1.14);
+    else if (event.key === '-') magnify(1/1.14);
+    else if (event.key === '0') snap(state.view);
+    else return;
+    event.preventDefault();
+  });
+  $('viewer-zoom-in').addEventListener('click',() => magnify(1.18));
+  $('viewer-zoom-out').addEventListener('click',() => magnify(1/1.18));
+  $('viewer-reset').addEventListener('click',() => snap(state.view));
+  $('viewer-expand').addEventListener('click',async () => {
+    const plate = $('assembly-plate');
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (plate.requestFullscreen) await plate.requestFullscreen();
+      else throw new Error();
+    } catch {
+      plate.classList.toggle('viewer-full');
+      $('viewer-expand').setAttribute('aria-pressed',plate.classList.contains('viewer-full'));
+      queuePaint();
+    }
+  });
+  document.addEventListener('fullscreenchange',() => {
+    $('viewer-expand').setAttribute('aria-pressed',Boolean(document.fullscreenElement));
+    queuePaint();
+  });
+  return {render,snap};
+})();
+
 function estimateStress(model, layout, force, depth) {
   const xLimit = model.ringL / 2 + 60;
   const yLimit = model.ringW / 2 + 60;
@@ -1089,7 +1566,7 @@ function renderStress(model, layout, result) {
   const view = $('stress-canvas');
   const { context, width, height } = prepareCanvas(view);
   if (width < 100 || height < 100) return;
-  drawAssemblyGrid(context, width, height);
+  drawPlotGrid(context, width, height);
   const { cols, rows, field, peak, xLimit, yLimit } = result;
   let raster = stressRasters.get(result);
   if (!raster) {
@@ -1116,6 +1593,13 @@ function renderStress(model, layout, result) {
   context.drawImage(raster, left, top, imageW, imageH);
   path(context, [[left, top], [left + imageW, top], [left + imageW, top + imageH], [left, top + imageH]], { stroke: theme.outline });
   path(context, rectangle(model.length, model.width).map(pos), { stroke: theme.dimension, dash: [4, 4] });
+  if (probe) {
+    const cx = left + imageW * probe.col / (cols - 1);
+    const cy = top + imageH * probe.row / (rows - 1);
+    const trace = profileAxis === 'x' ? [[left, cy], [left + imageW, cy]] : [[cx, top], [cx, top + imageH]];
+    path(context, trace, { stroke: '#11213f99', line: 2, dash: [4,4], close: false });
+    path(context, trace, { stroke: '#ffffffb3', line: 1, dash: [4,4], close: false });
+  }
   for (const hole of layout.holes) {
     const [x, y] = pos([hole.x, hole.y]);
     context.strokeStyle = '#FFFFFF';
@@ -1134,7 +1618,7 @@ function renderStress(model, layout, result) {
     const px = xLimit * (2 * probe.col / (cols - 1) - 1);
     const py = yLimit * (1 - 2 * probe.row / (rows - 1));
     const [sx, sy] = pos([px, py]);
-    for (const [stroke, line] of [['#1d2c28', 3], ['#ffffff', 1]]) {
+    for (const [stroke, line] of [['#273142', 3], ['#ffffff', 1]]) {
       path(context, [[sx - 7, sy], [sx + 7, sy]], { stroke, line, close: false });
       path(context, [[sx, sy - 7], [sx, sy + 7]], { stroke, line, close: false });
     }
@@ -1170,23 +1654,25 @@ function queuePaint() {
   if (animationFrame) return;
   animationFrame = requestAnimationFrame(() => {
     animationFrame = 0;
-    if (activeModel) {
-      if (!$('assembly').hidden) renderAssembly(activeModel, activeLayout);
-      if (!$('stress').hidden) renderStress(activeModel, activeLayout, activeEstimate);
-      return;
+    if (!$('assembly').hidden) viewer.render(activeModel,activeLayout);
+    if (!$('stress').hidden) {
+      if (activeEstimate) renderStress(activeModel,activeLayout,activeEstimate);
+      else {
+        const canvas = $('stress-canvas');
+        const { context, width, height } = prepareCanvas(canvas);
+        plotText(context, '请填写有效的设计参数', width / 2, height / 2, { align: 'center' });
+        canvas.setAttribute('aria-label', '参数无效，暂无结果');
+      }
+      paintProfile();
     }
-    for (const id of ['assembly-canvas', 'stress-canvas']) {
-      const canvas = $(id);
-      if (!canvas.getClientRects().length) continue;
-      const { context, width, height } = prepareCanvas(canvas);
-      plotText(context, '请填写有效的设计参数', width / 2, height / 2, { align: 'center' });
-      canvas.setAttribute('aria-label', '参数无效，暂无结果');
-    }
-    clickableHoles = [];
+    if (!$('simulation').hidden) paintProtocol();
+    if (!$('history').hidden) renderTrace();
   });
 }
 function refreshEstimate() {
   updateCaseSummary(activeModel);
+  updatePreflight(preflightInputKey());
+  renderScenarioDelta();
   if (!activeModel) return;
   activeEstimate = estimateStress(activeModel, activeLayout, readNumber('hole-force'), readNumber('depth'));
   queuePaint();
@@ -1207,6 +1693,9 @@ function refreshModel() {
     activeModel = activeLayout = activeEstimate = null;
     updateCaseSummary(null);
     updateSweep(null);
+    updatePreflight(null);
+    renderInstallation();
+    renderScenarioDelta();
     for (const id of [
       'ring', 'area', 'thrust', 'count-value', 'candidate-count', 'compare-count',
       'max-uniform', 'max-bias', 'cv-uniform', 'cv-bias', 'offset-uniform', 'offset-bias', 'peak',
@@ -1224,6 +1713,7 @@ function refreshModel() {
   state.hole = Math.max(0, activeLayout.ids.indexOf(selectedId));
   renderMetrics(model, layouts);
   renderHoles(activeLayout);
+  renderInstallation();
   updateSweep(model, activeLayout);
   refreshEstimate();
 }
@@ -1731,9 +2221,10 @@ let snapshots;
 function validScenario(item) {
   if (item?.version !== 1 || typeof item.name !== 'string' || !item.name.trim() || item.name.length > 60 ||
       !Number.isFinite(Date.parse(item.savedAt)) || !['uniform', 'bias'].includes(item.scheme) ||
-      !['iso', 'plan'].includes(item.view) || !item.values) return false;
+      !['iso', 'plan', 'bottom'].includes(item.view) || !item.values) return false;
   const fields = item.values;
   if (!scenarioFields.every(id => Number.isFinite(fields[id]))) return false;
+  if (!Object.keys(experimentFields).every(id => !(id in fields) || validNumber(id, fields[id]))) return false;
   const { length, width, margin, nx, ny, count, pressure } = fields;
   if (length <= 0 || width <= 0 || margin < 0 || !Number.isSafeInteger(nx) || !Number.isSafeInteger(ny) ||
       nx < 1 || ny < 1 || nx + ny > 256 || !Number.isInteger(count) || count < 1 || count > 2 * (nx + ny) ||
@@ -1770,10 +2261,11 @@ function applyScenario(item) {
     if (id === 'count') $('count').max = String(2 * (item.values.nx + item.values.ny));
     $(id).value = String(item.values[id]);
   }
+  for (const [id, fallback] of Object.entries(experimentFields)) $(id).value = item.values[id] ?? fallback;
   state.scheme = item.scheme;
   state.view = item.view;
   applyAria(schemes, 'scheme', state.scheme);
-  applyAria(views, 'view', state.view);
+  viewer.snap(state.view);
   refreshModel();
   goTo('assembly');
   toast('已恢复「' + item.name + '」');
@@ -1781,6 +2273,8 @@ function applyScenario(item) {
 function renderSnapshots() {
   const items = readSnapshots();
   $('snap-empty').hidden = items.length > 0;
+  snapshotComparisonOptions(items);
+  renderScenarioDelta();
   $('snapshot-list').replaceChildren(...items.map(item => {
     const row = document.createElement('article');
     row.className = 'snapshot-row';
@@ -1834,7 +2328,8 @@ $('snapshot-form').addEventListener('submit', event => {
   if (!activeModel) return;
   const item = {
     version: 1, name: $('snapshot-name').value.trim(), savedAt: new Date().toISOString(),
-    scheme: state.scheme, view: state.view, values: Object.fromEntries(scenarioFields.map(id => [id, readNumber(id)])),
+    scheme: state.scheme, view: state.view,
+    values: Object.fromEntries([...scenarioFields,...Object.keys(experimentFields)].map(id => [id,readNumber(id)])),
   };
   if (!validScenario(item)) {
     $('snapshot-message').textContent = '请填写工况名称，并检查有限元模型参数。';
@@ -1912,6 +2407,484 @@ document.addEventListener('keydown', event => {
   }
 });
 
+const experimentFields = {
+  'bolt-diameter': 45, 'min-clearance': 10, 'ramp-seconds': 60,
+  'hold-seconds': 120, 'release-seconds': 60,
+};
+let profileAxis = 'x';
+let recordedTrace = null;
+let traceRead = 0;
+let boltOrder = [];
+let checking = 0;
+let checkKey;
+const protocolFields = ['ramp-seconds','hold-seconds','release-seconds'];
+const displayUnits = {
+  length:'mm',width:'mm',margin:'mm',count:'根',pressure:'MPa','hole-force':'kN',depth:'mm',
+  'plate-thickness':'mm','flange-thickness':'mm','flange-lip':'mm','plate-edge':'mm','mesh-size':'mm',
+  'concrete-e':'MPa','flange-e':'MPa','bolt-diameter':'mm','min-clearance':'mm',
+  'ramp-seconds':'s','hold-seconds':'s','release-seconds':'s',
+};
+const displayFields = {
+  length:'水腔长',width:'水腔宽',margin:'孔圈边距',nx:'水平分段',ny:'竖直分段',count:'螺栓数',
+  pressure:'加载水压','hole-force':'每孔力',depth:'截面深度','plate-thickness':'混凝土厚度',
+  'flange-thickness':'法兰厚度','flange-lip':'孔圈外缘留量','plate-edge':'板外缘留量',
+  'mesh-size':'目标网格','concrete-e':'混凝土弹性模量','concrete-nu':'混凝土泊松比',
+  'flange-e':'法兰弹性模量','flange-nu':'法兰泊松比','bolt-diameter':'螺栓外径',
+  'min-clearance':'自定最小净距','ramp-seconds':'升压时长','hold-seconds':'保压时长','release-seconds':'卸压时长',
+};
+
+function validNumber(id, value = readNumber(id)) {
+  const field = $(id);
+  return Number.isFinite(value) && value >= Number(field.min) && value <= Number(field.max);
+}
+function offerCsv(name, headings, rows) {
+  const string = [headings, ...rows.map(row => row.join(','))].join('\r\n') + '\r\n';
+  download(new Blob([string],{type:'text/csv;charset=utf-8'}),name + '.csv');
+}
+
+function renderInstallation() {
+  const diameter = readNumber('bolt-diameter');
+  const threshold = readNumber('min-clearance');
+  const layout = activeLayout;
+  boltOrder = [];
+  $('closest-distance').textContent = $('clearance-result').textContent = '—';
+  $('clearance-note').removeAttribute('data-warning');
+  $('bolt-sequence').replaceChildren();
+  $('export-sequence').disabled = !layout;
+  if (!layout) {
+    $('clearance-note').textContent = '等待有效孔位。';
+    return;
+  }
+  let closest = {distance:Infinity};
+  for (const [i,a] of layout.holes.entries()) {
+    for (let j = i+1; j < layout.holes.length; j++) {
+      const b = layout.holes[j];
+      const distance = Math.hypot(a.x-b.x,a.y-b.y);
+      if (distance < closest.distance) closest = {distance,a,b};
+    }
+  }
+  if (!Number.isFinite(closest.distance)) $('clearance-note').textContent = '当前仅有一根螺栓，无孔间净距可核查。';
+  else {
+    $('closest-distance').textContent = decimal(closest.distance) + ' mm';
+    if (!validNumber('bolt-diameter') || !validNumber('min-clearance')) {
+      $('clearance-note').textContent = '请在标注的范围内填写外径和净距。';
+      $('clearance-note').setAttribute('data-warning','');
+    } else {
+      const clearance = closest.distance - diameter;
+      $('clearance-result').textContent = decimal(clearance) + ' mm';
+      const flag = clearance < threshold;
+      $('clearance-note').toggleAttribute('data-warning',flag);
+      $('clearance-note').textContent = '最近孔对 ' + holeId(closest.a.id) + ' / ' + holeId(closest.b.id) +
+        (flag ? '，低于输入的最小净距。' : '，达到输入的最小净距。');
+    }
+  }
+
+  const pending = layout.holes.map((hole,index) => ({...hole,index}));
+  const group = document.createDocumentFragment();
+  while (pending.length) {
+    const a = pending.shift();
+    let other = -1;
+    let opposite = Infinity;
+    for (let i = 0; i < pending.length; i++) {
+      const b = pending[i];
+      const distance = Math.hypot(a.x+b.x,a.y+b.y);
+      if (distance < opposite) { other = i; opposite = distance; }
+    }
+    const pair = other >= 0 ? [a,pending.splice(other,1)[0]] : [a];
+    const wrap = document.createElement('span');
+    wrap.className = 'bolt-pair';
+    for (const hole of pair) {
+      const step = boltOrder.push(hole);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'button';
+      button.textContent = holeId(hole.id);
+      button.title = '顺序 ' + step + ' · 孔 ' + holeId(hole.id);
+      button.setAttribute('aria-label',button.title);
+      button.addEventListener('click',() => {
+        selectHole(hole.index,false);
+        $('assembly-stage').scrollIntoView({block:'center'});
+      });
+      wrap.append(button);
+    }
+    group.append(wrap);
+  }
+  $('bolt-sequence').append(group);
+}
+$('export-sequence').addEventListener('click',() => {
+  flushModelRefresh();
+  if (boltOrder.length) offerCsv('交叉安装顺序','step,hole_id,x_mm,y_mm',
+    boltOrder.map((hole,i) => [i+1,holeId(hole.id),hole.x,hole.y]));
+});
+for (const id of ['bolt-diameter','min-clearance']) $(id).addEventListener('input',() => {
+  renderInstallation();
+  queuePaint();
+});
+for (const id of ['layer-plate','layer-flange','layer-water','layer-bolts','explode']) $(id).addEventListener('input',() => {
+  $('explode-value').textContent = $('explode').value + '%';
+  queuePaint();
+});
+
+function chart(canvas, series, {xUnit, yUnit='MPa', guides=[], message=''}={}) {
+  const {context:ctx,width,height} = prepareCanvas(canvas);
+  if (!width || !height) return;
+  if (!series.length) {
+    plotText(ctx,message,width/2,height/2,{align:'center'});
+    return;
+  }
+  let left=Infinity, right=-Infinity, low=0, high=-Infinity;
+  for (const item of series) for (const [x,y] of item.points) {
+    left=Math.min(left,x); right=Math.max(right,x);
+    low=Math.min(low,y); high=Math.max(high,y);
+  }
+  if (high <= low) high=low+1;
+  if (right <= left) right=left+1;
+  const inset=width < 410 ? 44 : 57;
+  const w=Math.max(40,width-inset-25), h=Math.max(55,height-57);
+  const project = ([x,y]) => [inset+(x-left)*w/(right-left), 30+(high-y)*h/(high-low)];
+  const label = value => Number.isFinite(value) && Math.abs(value) >= 10000 ? value.toExponential(1) : decimal(value,2);
+  for (let i=0; i <= 4; i++) {
+    const t=i/4;
+    const y=30+t*h;
+    path(ctx,[[inset,y],[inset+w,y]],{stroke:color('line'),close:false});
+    plotText(ctx,label(high-t*(high-low)),inset-7,y,{align:'right',size:10});
+  }
+  for (const i of [0,.25,.5,.75,1]) {
+    const x=inset+i*w;
+    plotText(ctx,label(left+i*(right-left)),x,height-14,{align:'center',size:10});
+  }
+  plotText(ctx,yUnit,inset,12,{size:10});
+  plotText(ctx,xUnit,width-13,12,{align:'right',size:10});
+  for (const x of guides) {
+    if (x <= left || x >= right) continue;
+    const [u] = project([x,0]);
+    path(ctx,[[u,30],[u,height-27]],{stroke:color('quiet'),close:false,dash:[3,4]});
+  }
+  for (const {points,tint,dash=[]} of series) {
+    path(ctx,points.map(project),{stroke:tint,line:1.8,dash,close:false});
+  }
+}
+function currentProfile() {
+  const result = activeEstimate;
+  if (!result) return null;
+  const {cols,rows,xLimit,yLimit,field} = result;
+  const col = probe?.col ?? Math.floor(cols/2), row = probe?.row ?? Math.floor(rows/2);
+  const x = i => xLimit*(2*i/(cols-1)-1);
+  const y = i => yLimit*(1-2*i/(rows-1));
+  const alongX = profileAxis === 'x';
+  const points = alongX
+    ? Array.from({length:cols},(_,i) => [x(i),field[row*cols+i]])
+    : Array.from({length:rows},(_,i) => [y(rows-1-i),field[(rows-1-i)*cols+col]]);
+  return {points, crossValue:alongX ? y(row) : x(col), probeValue:alongX ? x(col) : y(row), alongX};
+}
+function paintProfile() {
+  const profile = currentProfile();
+  $('export-profile').disabled = !profile;
+  if (!profile) {
+    $('profile-note').textContent = '等待有效孔位。';
+    chart($('profile-chart'),[],{message:'暂无应力剖线'});
+    return;
+  }
+  $('profile-note').textContent = (profile.alongX?'Y':'X') + ' = ' + decimal(profile.crossValue) +
+    ' mm · ' + profile.points.length + ' 个网格点' + (probe ? ' · 虚线为探针位置' : ' · 通过中心');
+  chart($('profile-chart'),[{points:profile.points,tint:color('mint')}],
+    {xUnit:(profile.alongX?'X':'Y') + ' / mm',guides:probe?[profile.probeValue]:[]});
+}
+const profileButtons = [...document.querySelectorAll('[data-profile]')];
+for (const button of profileButtons) button.addEventListener('click',() => {
+  profileAxis=button.dataset.profile;
+  applyAria(profileButtons,'profile',profileAxis);
+  queuePaint();
+});
+$('export-profile').addEventListener('click',() => {
+  flushModelRefresh();
+  const profile=currentProfile();
+  if (!profile) return;
+  const rows=profile.points.map(([distance,value]) => profile.alongX ?
+    [distance,profile.crossValue,value,activeEstimate.depth,activeEstimate.force] :
+    [profile.crossValue,distance,value,activeEstimate.depth,activeEstimate.force]);
+  offerCsv('应力剖线-' + profileAxis,'x_mm,y_mm,stress_mpa,depth_mm,force_kn',rows);
+});
+
+function currentProtocol() {
+  if (!activeModel || !protocolFields.every(id => validNumber(id))) return null;
+  const [ramp,hold,release] = protocolFields.map(readNumber);
+  const pressure = activeModel.pressure;
+  return {ramp,hold,release,pressure,points:[[0,0],[ramp,pressure],[ramp+hold,pressure],[ramp+hold+release,0]]};
+}
+function paintProtocol() {
+  const plan=currentProtocol();
+  $('export-protocol').disabled = !plan;
+  if (!plan) {
+    $('protocol-note').textContent = '请填写有效水腔参数和 1–86400 秒的阶段时长。';
+    chart($('protocol-chart'),[],{message:'暂无试验计划'});
+    return;
+  }
+  chart($('protocol-chart'),[{points:plan.points,tint:color('mint')}],
+    {xUnit:'时间 / s',guides:[plan.ramp,plan.ramp+plan.hold]});
+  $('protocol-note').textContent = '目标 ' + plan.pressure + ' MPa · 总时长 ' +
+    decimal(plan.ramp+plan.hold+plan.release) + ' s · 计划升压率 ' + decimal(plan.pressure/plan.ramp,4) + ' MPa/s';
+}
+for (const id of protocolFields) $(id).addEventListener('input',() => { renderScenarioDelta(); queuePaint(); });
+$('export-protocol').addEventListener('click', () => {
+  flushModelRefresh();
+  const plan=currentProtocol();
+  if (plan) offerCsv('水压试验计划','t_s,pressure_mpa',plan.points);
+});
+
+function updatePreflight(payloadKey) {
+  if (checkKey === payloadKey) return;
+  checkKey=payloadKey;
+  checking++;
+  $('run-preflight').disabled = !activeModel;
+  for (const id of ['preflight-elements','preflight-faces','preflight-thrust']) $(id).textContent='—';
+  $('preflight-note').removeAttribute('data-warning');
+  $('preflight-note').textContent=activeModel?'工况参数有更新，可检查当前模型。':'请填写有效的水腔和孔位参数。';
+}
+function localPreflight(params) {
+  const {L,W,off,holes,mesh_mm:step,plate_thickness_mm:t,flange_thickness_mm:f,
+    flange_lip_mm:lip,plate_edge_mm:edge,pressure_mpa:p} = params;
+  function segments(seeds, inner, outer) {
+    const stations=[];
+    for (const point of seeds.sort((a,b)=>a-b)) {
+      if (!stations.length || point-stations.at(-1)>1e-7) stations.push(point);
+    }
+    let full=0, wet=0, rim=0;
+    for (let i=1; i<stations.length; i++) {
+      const size=stations[i]-stations[i-1], midpoint=(stations[i]+stations[i-1])/2;
+      const count=Math.max(1,Math.ceil(size/step));
+      full+=count;
+      if (Math.abs(midpoint)<inner) wet+=count;
+      if (Math.abs(midpoint)<outer) rim+=count;
+    }
+    return {full,wet,rim};
+  }
+  function axis(dimension,key) {
+    const inner=dimension/2, outer=inner+off+lip, border=outer+edge;
+    return segments([-border,-outer,-inner,inner,outer,border,...holes.map(h=>h[key])],inner,outer);
+  }
+  const x=axis(L,'x_mm'), y=axis(W,'y_mm');
+  const slab=Math.ceil(t/step), flange=Math.ceil((t+f-t)/step);
+  const faces=x.wet*y.wet;
+  return {
+    elements:x.full*y.full*slab+(x.rim*y.rim-faces)*flange, pressure_faces:faces,
+    thrust_kn:p*L*W/1000, within_mesh_limit:x.full*y.full*(slab+flange)<=160000,
+  };
+}
+function preflightInputKey() {
+  return activeModel ? [activeModel.length,activeModel.width,activeModel.margin,activeModel.pressure,
+    readNumber('hole-force'),...activeLayout.holes.flatMap(hole=>[hole.id,hole.x,hole.y]),
+    ...Object.values(solverParameters).map(readNumber)].join('|') : null;
+}
+for (const id of Object.values(solverParameters)) $(id).addEventListener('input',()=>{
+  updatePreflight(preflightInputKey());
+  renderScenarioDelta();
+  queuePaint();
+});
+$('run-preflight').addEventListener('click',async () => {
+  flushModelRefresh();
+  if (!activeModel) return;
+  let payload;
+  try { payload=currentSimulationInput(); }
+  catch (error) { $('preflight-note').textContent=error.message; return; }
+  const ticket=++checking;
+  const button=$('run-preflight');
+  const status=$('preflight-note');
+  button.disabled=true;
+  status.textContent='正在检查当前网格参数…';
+  try {
+    let result, origin='本地估算';
+    if (location.protocol!=='file:') {
+      try {
+        result=await api('/api/simulation/preflight',{
+          method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),
+        });
+        origin='FastAPI';
+      } catch (error) {
+        if (error.status===422) throw error;
+      }
+    }
+    if (ticket!==checking) return;
+    result ??= localPreflight(payload);
+    $('preflight-elements').textContent=decimal(result.elements,0);
+    $('preflight-faces').textContent=decimal(result.pressure_faces,0);
+    $('preflight-thrust').textContent=decimal(result.thrust_kn) + ' kN';
+    status.toggleAttribute('data-warning',!result.within_mesh_limit);
+    status.textContent=origin + ' · ' + (result.within_mesh_limit ?
+      '当前参数在建模脚本的 160,000 网格护栏内。' : '超过建模脚本的 160,000 网格护栏，请调大目标网格尺寸或减少分段。');
+  } catch (error) {
+    if (ticket===checking) { status.setAttribute('data-warning',''); status.textContent=error.message; }
+  } finally {
+    if (ticket===checking) button.disabled=false;
+  }
+});
+
+function renderPair() {
+  for (const side of ['left','right']) {
+    const item=archiveCatalog.find(entry=>entry.id===$('paired-' + side).value);
+    const part=item.components[$('paired-part').value];
+    const img=$('paired-image-' + side);
+    const url=embeddedImage(part.asset);
+    img.hidden=!url;
+    if (url) img.src=url;
+    else img.removeAttribute('src');
+    img.alt=item.label + ' · ' + part.label;
+    $('paired-caption-' + side).textContent=part.odb_name + ' · ' + part.legend_min_mpa + ' 至 ' + part.legend_max_mpa + ' MPa';
+  }
+}
+for (const side of ['left','right']) {
+  for (const item of archiveCatalog) {
+    const option=new Option(item.label,item.id);
+    $('paired-' + side).append(option);
+  }
+}
+$('paired-right').value='14';
+for (const id of ['paired-left','paired-right','paired-part']) $(id).addEventListener('change',renderPair);
+$('toggle-archive-compare').addEventListener('click',() => {
+  const panel=$('archive-compare');
+  panel.hidden=!panel.hidden;
+  const toggle=$('toggle-archive-compare');
+  toggle.setAttribute('aria-expanded',!panel.hidden);
+  toggle.textContent=panel.hidden?'展开对照':'收起对照';
+  if (!panel.hidden) renderPair();
+});
+
+function parseTrace(text) {
+  const lines=text.trim().split(/\r?\n/).filter(line=>line.trim());
+  const header=lines.shift()?.toLowerCase().split(',').map(value=>value.trim().replace(/^"|"$/g,''));
+  if (header?.length!==2 || !['t_s','time_s'].includes(header[0]) || header[1]!=='pressure_mpa') {
+    throw new Error('表头应为 t_s,pressure_mpa。');
+  }
+  if (lines.length<2 || lines.length>100000) throw new Error('需要 2–100,000 条采集记录。');
+  const number=/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+  const rows=[];
+  for (const [i,line] of lines.entries()) {
+    const values=line.split(',').map(value=>value.trim().replace(/^"|"$/g,''));
+    if (values.length!==2 || !values.every(value=>number.test(value))) throw new Error('第 ' + (i+2) + ' 行有无效数字。');
+    const valuesNum=values.map(Number);
+    const [time,pressure]=valuesNum;
+    if (!Number.isFinite(time) || !Number.isFinite(pressure) || time<0 || time>1e9 || Math.abs(pressure)>1e6
+        || (i>0 && time<=rows[i-1][0])) throw new Error('第 ' + (i+2) + ' 行超出范围，或时间未严格递增。');
+    rows.push(valuesNum);
+  }
+  return rows;
+}
+function interp(points, time) {
+  if (time<points[0][0] || time>points.at(-1)[0]) return null;
+  let low=0,high=points.length-1;
+  while (high-low>1) {
+    const middle=(low+high)>>1;
+    if (points[middle][0]<=time) low=middle;
+    else high=middle;
+  }
+  const [x,y]=points[low], [u,v]=points[high];
+  return y+(v-y)*(time-x)/(u-x);
+}
+function renderTrace() {
+  if (!recordedTrace) return;
+  const points=recordedTrace.points;
+  const plan=currentProtocol();
+  const series=[];
+  const guide=plan?[plan.ramp,plan.ramp+plan.hold]:[];
+  if (plan) series.push({points:plan.points,tint:color('quiet'),dash:[4,4]});
+  series.push({points,tint:color('mint')});
+  chart($('trace-chart'),series,{xUnit:'时间 / s',guides:guide});
+  $('trace-max').textContent=decimal(recordedTrace.peak,4) + ' MPa';
+  $('trace-count').textContent=decimal(points.length,0);
+  const [first,last]=guide.map(time=>interp(points,time));
+  $('trace-delta').textContent=first!=null && last!=null ? decimal(last-first,4) + ' MPa' : '无完整保压覆盖';
+}
+$('choose-trace').addEventListener('click',()=>$('trace-file').click());
+$('trace-template').addEventListener('click',() => offerCsv('采集格式示例','t_s,pressure_mpa',[[0,0],[1,0],[2,0]]));
+$('trace-file').addEventListener('change',async event => {
+  const file=event.currentTarget.files[0];
+  event.currentTarget.value='';
+  if (!file) return;
+  const ticket=++traceRead;
+  const status=$('trace-note');
+  try {
+    if (file.size>5*1024*1024) throw new Error('文件不能大于 5 MB。');
+    const content=await file.text();
+    if (ticket!==traceRead) return;
+    const points=parseTrace(content);
+    recordedTrace={points,peak:points.reduce((peak,point)=>Math.max(peak,point[1]),-Infinity)};
+    status.removeAttribute('data-warning');
+    status.textContent=file.name + ' · 实测为实线，当前计划为灰色虚线。';
+    $('trace-results').hidden=false;
+    queuePaint();
+  } catch (error) {
+    if (ticket!==traceRead) return;
+    status.setAttribute('data-warning','');
+    status.textContent=error.message + (recordedTrace?' 仍显示上次导入的曲线。':'');
+  }
+});
+
+function snapshotComparisonOptions(items) {
+  const snapshotKey=item=>item.savedAt + '|' + item.name;
+  const options=[['current','当前工作台'],...items.map(item=>[snapshotKey(item),item.name])];
+  for (const id of ['delta-base','delta-compare']) {
+    const select=$(id), previous=select.value;
+    select.replaceChildren(...options.map(([value,label])=>new Option(label,value)));
+    const fallback=id==='delta-base' && items.length?snapshotKey(items[0]):'current';
+    select.value=options.some(([value])=>value===previous) && (select.dataset.hasSnapshot || id!=='delta-base')
+      ? previous : fallback;
+    select.dataset.hasSnapshot=items.length ? 'yes' : '';
+  }
+}
+function renderScenarioDelta() {
+  if ($('scenarios').hidden) return;
+  const list=readSnapshots();
+  const select=id=> {
+    const key=$(id).value;
+    const item=list.find(entry=>entry.savedAt + '|' + entry.name === key);
+    if (item) return {scheme:item.scheme,values:{...experimentFields,...item.values}};
+    return {scheme:state.scheme,values:Object.fromEntries(Object.keys(displayFields).map(name=>[name,readNumber(name)]))};
+  };
+  const base=select('delta-base'), compare=select('delta-compare'), rows=[];
+  for (const id of ['scheme',...Object.keys(displayFields)]) {
+    const a=id==='scheme'?base.scheme:base.values[id];
+    const b=id==='scheme'?compare.scheme:compare.values[id];
+    if (Object.is(a,b)) continue;
+    const unit=displayUnits[id] ? ' '+displayUnits[id] : '';
+    const scheme={uniform:'几何初筛',bias:'偏置对照'};
+    const show=v=>id==='scheme'?scheme[v]:Number.isFinite(v)?decimal(v,6)+unit:'—';
+    const delta=id==='scheme' || !Number.isFinite(a) || !Number.isFinite(b)?'—':(b-a>0?'+':'')+decimal(b-a,6)+unit;
+    const row=document.createElement('tr');
+    const name=document.createElement('th');
+    name.scope='row'; name.textContent=displayFields[id] ?? '孔位方案';
+    row.append(name);
+    for (const value of [show(a),show(b),delta]) row.insertCell().textContent=value;
+    rows.push(row);
+  }
+  $('delta-rows').replaceChildren(...rows);
+  $('delta-table').hidden=!rows.length;
+  $('delta-note').textContent=list.length?
+    (rows.length?'有 ' + rows.length + ' 项参数发生变化。': '所选工况一致。') :
+    '先保存或导入快照，即可逐项对比参数。';
+}
+for (const id of ['delta-base','delta-compare']) $(id).addEventListener('change',renderScenarioDelta);
+
+$('export-handoff').addEventListener('click',() => {
+  flushModelRefresh();
+  if (!activeLayout) { toast('请先填写有效的孔位和载荷。'); return; }
+  const plan=currentProtocol();
+  const model=activeModel;
+  const lines=['沧砼鉴 · 高水压试验交接单','导出时间 ' + new Date().toLocaleString('zh-CN'),'',
+    '工况参数',...Object.entries(displayFields).map(([id,label]) => {
+      const value=readNumber(id);
+      return label + '  ' + (Number.isFinite(value)?value + ' ' + (displayUnits[id] ?? ''):'未填写');
+    }),
+    '',
+    '孔位方案  ' + (state.scheme==='uniform'?'几何初筛':'偏置对照'),
+    '入选孔号  ' + activeLayout.ids.map(holeId).join('、'),
+    '水压合力  ' + decimal(model.pressure*model.length*model.width/1000) + ' kN',
+    '附加压应力估算峰值  ' + formatStress(activeEstimate.peak.value) + ' MPa',
+    plan?'试验计划  升压 ' + plan.ramp + ' s / 保压 ' + plan.hold + ' s / 卸压 ' + plan.release + ' s':'试验计划  待补充',
+    '采集文件编号  ____________________','记录人  ____________________','',
+    '本文件用于参数交接，安装、加载与停机条件以批准的试验方案为准。'];
+  download(new Blob([lines.join('\r\n') + '\r\n'],{type:'text/plain;charset=utf-8'}),'高水压试验交接单.txt');
+});
+
 $('geometry').addEventListener('input', scheduleModelRefresh);
 $('geometry').addEventListener('change', scheduleModelRefresh);
 $('count').addEventListener('input', scheduleModelRefresh);
@@ -1926,26 +2899,15 @@ for (const button of schemes) button.addEventListener('click', () => {
 });
 for (const button of views) button.addEventListener('click', () => {
   state.view = button.dataset.view;
-  applyAria(views, 'view', state.view);
-  queuePaint();
+  viewer.snap(state.view);
 });
 $('hole-rows').addEventListener('click', event => {
   const button = event.target.closest('.hole-button');
   if (button) selectHole(Number(button.dataset.hole), false);
 });
-$('assembly-canvas').addEventListener('click', event => {
-  const rect = event.currentTarget.getBoundingClientRect();
-  let nearest = -1;
-  let distance = 13;
-  for (const [index, [x, y]] of clickableHoles.entries()) {
-    const gap = Math.hypot(event.clientX - rect.left - x, event.clientY - rect.top - y);
-    if (gap < distance) { nearest = index; distance = gap; }
-  }
-  if (nearest >= 0) selectHole(nearest, true);
-});
 window.addEventListener('resize', queuePaint, { passive: true });
 const observer = new ResizeObserver(queuePaint);
-for (const id of ['assembly-canvas', 'stress-canvas']) observer.observe($(id));
+for (const id of ['assembly-stage','stress-canvas','profile-chart','protocol-chart','trace-chart']) observer.observe($(id));
 refreshModel();
 showArchive();
 showWorkspace();

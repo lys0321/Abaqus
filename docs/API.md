@@ -73,6 +73,24 @@
 
 调用不要求安装 Abaqus。扫描采用与单次估算相同的网格和输入约束，利用点载模型对力的线性关系复用计算。
 
+## 提交前检查网格与加载
+
+`POST /api/simulation/preflight`
+
+请求体与 `POST /api/simulation/run` 相同。接口使用真实建模脚本中的分段逻辑计算网格和压力面，未配置 Abaqus 时也可调用。下列为默认工况（1200 × 600 mm 水腔、32 根、5 MPa、50 mm 目标网格）响应。
+
+```json
+{
+  "elements":11896,
+  "pressure_faces":504,
+  "thrust_kn":3600.0,
+  "within_mesh_limit":true,
+  "mesh_limit":160000
+}
+```
+
+限制判断基于规则包络网格的单元数上界，可能高于 `elements`。该检查不执行静力求解，也不替代网格收敛和接触条件验证。
+
 ## 提交真实求解
 
 `POST /api/simulation/run`

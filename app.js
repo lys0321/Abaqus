@@ -125,6 +125,7 @@ function updateContour() {
 function submitParameters(goToResult) {
   const parameters = Object.fromEntries([...new FormData(form)].map(([key, value]) => [key, Number(value)]));
   if (parameters.crackL > parameters.length || parameters.crackH > parameters.depth || parameters.crackW > parameters.width) {
+    byId('form-note').classList.add('is-error');
     byId('form-note').textContent = '请检查裂缝尺寸，裂缝各方向应在试件尺寸范围内。';
     return;
   }
@@ -133,11 +134,10 @@ function submitParameters(goToResult) {
   byId('subtitle').textContent = parameters.count + ' 根螺栓 / ' + parameters.pressure + ' MPa' + (matched ? ' / jieguo2' : ' / 自定义工况');
   byId('badge').textContent = matched ? '已匹配存档' : '待求解';
   byId('badge').classList.toggle('pending', !matched);
-  for (const id of ['figure', 'source', 'part', 'quantity', 'image-link']) {
-    const element = byId(id);
-    if (element.tagName === 'SELECT') element.disabled = !matched;
-    else element.hidden = !matched;
+  for (const id of ['figure', 'source', 'cloud-controls']) {
+    byId(id).hidden = !matched;
   }
+  byId('form-note').classList.remove('is-error');
   byId('empty').hidden = matched;
   byId('empty-text').textContent = '已生成周边对称布置。该参数组合需要在 Abaqus 中重新建模或求解，才能得到应力和位移云图。';
   byId('form-note').textContent = matched ? '已匹配基准工况。C40 混凝土，底端固定。' : '已生成候选布置，可查看测点对比作为参考。';
@@ -147,7 +147,8 @@ function submitParameters(goToResult) {
     navigate(view);
     const resultTabs = byId('results').querySelector('.tabs');
     const activeTab = tabs.find(button => button.dataset.view === view);
-    if (resultTabs.getBoundingClientRect().bottom < 0) {
+    const { top, bottom } = resultTabs.getBoundingClientRect();
+    if (top < 0 || bottom > window.innerHeight) {
       resultTabs.scrollIntoView({ block: 'start' });
       activeTab.focus({ preventScroll: true });
     }
@@ -155,6 +156,7 @@ function submitParameters(goToResult) {
 }
 
 form.addEventListener('input', () => {
+  byId('form-note').classList.remove('is-error');
   byId('form-note').textContent = '参数已修改。提交后更新布置与结果。';
 });
 form.addEventListener('submit', event => {

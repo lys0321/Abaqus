@@ -7,45 +7,59 @@
 <title>高水压螺栓仿真 | 沧砼鉴</title>
 <link rel="stylesheet" href="style.css">
 <script defer src="app.js"></script>
+<script defer src="viewer.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#results">跳到仿真结果</a>
 <header class="appbar">
   <div class="shell appbar-inner">
-    <div class="identity"><span class="brand-mark" aria-hidden="true"><i></i></span><strong>沧砼鉴</strong><span class="app-name">高水压加载试验</span></div>
-    <a class="jump-link" href="#config-title">工况参数 <span aria-hidden="true">↘</span></a>
+    <div class="identity">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <strong>沧砼鉴</strong>
+      <span class="app-name">高水压加载试验</span>
+    </div>
+    <a class="jump-link" href="#config-title">工况参数 <span aria-hidden="true">↓</span></a>
   </div>
 </header>
 
 <main class="shell">
   <div class="page-title">
-    <h1>高水压螺栓仿真</h1>
-    <div class="run-state" aria-live="polite">
-      <span id="subtitle">32 根螺栓 / 5 MPa / jieguo2</span>
-      <span class="badge" id="badge">已匹配存档</span>
-    </div>
+    <div><h1>高水压螺栓仿真</h1><p id="subtitle">32 根螺栓 / 5 MPa / jieguo2</p></div>
+    <span class="badge" id="badge" role="status">已匹配存档</span>
   </div>
 
   <div class="workbench" data-ui>
     <section class="results" id="results" aria-label="仿真结果">
       <nav class="tabs" aria-label="结果视图">
-        <button type="button" data-view="cloud" aria-controls="cloud" aria-pressed="true">Abaqus 云图</button>
-        <button type="button" data-view="layout" aria-controls="layout" aria-pressed="false">螺栓布置</button>
-        <button type="button" data-view="compare" aria-controls="compare" aria-pressed="false">测点对比</button>
+        <button type="button" data-view="cloud" aria-controls="cloud" aria-pressed="true"><span class="tab-icon icon-field" aria-hidden="true"></span>Abaqus 云图</button>
+        <button type="button" data-view="layout" aria-controls="layout" aria-pressed="false"><span class="tab-icon icon-layout" aria-hidden="true"></span>螺栓布置</button>
+        <button type="button" data-view="compare" aria-controls="compare" aria-pressed="false"><span class="tab-icon icon-compare" aria-hidden="true"></span>测点对比</button>
       </nav>
       <section class="view" id="cloud" aria-label="Abaqus 云图">
-        <div class="viewport-toolbar">
+        <div class="viewport-toolbar" id="cloud-controls">
           <div class="filters">
             <div class="filter"><label for="part">部件</label><select id="part"><option value="concrete">混凝土</option><option value="tank">加压水箱</option></select></div>
-            <div class="filter"><label for="quantity">结果变量</label><select id="quantity"><option value="u">U3 / Z 向位移</option><option value="s">S33 / Z 向应力</option></select></div>
+            <div class="filter"><label for="quantity">变量</label><select id="quantity"><option value="u">位移 U3</option><option value="s">应力 S33</option></select></div>
           </div>
-          <a class="tool-button" id="image-link" href="assets/image18.png" target="_blank" rel="noopener">打开原图 <span aria-hidden="true">↗</span></a>
+          <div class="plot-actions">
+            <button type="button" class="tool-button" id="expand-plot" aria-haspopup="dialog"><span class="icon-fit" aria-hidden="true"></span>放大</button>
+            <a class="tool-button" id="image-link" href="assets/image18.png" target="_blank" rel="noopener">原图 <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
         <figure id="figure">
           <div class="contour-stage">
             <a id="original" href="assets/image18.png" target="_blank" rel="noopener"><img id="contour" src="assets/image18.png" alt="Abaqus 混凝土 Z 向位移存档云图"></a>
           </div>
-          <figcaption class="plot-caption"><span id="caption">混凝土 Z 向位移</span><span class="mono">Abaqus/Standard 2022</span></figcaption>
+          <figcaption class="plot-footer">
+            <div class="plot-identity">
+              <span class="quantity mono" id="quantity-symbol">U3</span>
+              <div><strong id="caption">混凝土 Z 向位移</strong><span class="solver">Abaqus/Standard 2022</span></div>
+            </div>
+            <div class="legend" aria-label="原图图例范围">
+              <span class="legend-label">图例范围 <span id="range-unit">mm</span></span>
+              <span class="legend-values mono"><span id="range-min">−0.1870</span><span>至</span><span id="range-max">+0.02932</span></span>
+            </div>
+          </figcaption>
         </figure>
         <div id="empty" class="empty" hidden>
           <h2>该工况暂无云图</h2>
@@ -70,12 +84,13 @@
       <section class="view" id="compare" aria-labelledby="compare-title" hidden>
         <div class="view-heading"><div><h2 id="compare-title">Z 向位移差值</h2><p>混凝土与钢板，存档中的四个测点。</p></div><span class="tag">单位 mm</span></div>
         <div class="compare-summary">
-          <div><span>最大绝对位移差</span><strong id="max32">0.3016</strong><span>32 根螺栓</span></div>
-          <div><span>最大绝对位移差</span><strong id="max16">0.5411</strong><span>16 根螺栓</span></div>
+          <div><span>32 根螺栓</span><strong id="max32">0.3016</strong></div>
+          <div><span>16 根螺栓</span><strong id="max16">0.5411</strong></div>
+          <span class="compare-summary-label">四个测点的最大绝对位移差</span>
         </div>
         <div class="comparison">
           <table id="comparison-table">
-            <thead><tr><th scope="col">测点</th><th scope="col">32 根螺栓</th><th scope="col">16 根螺栓</th></tr></thead>
+            <thead><tr><th scope="col">测点</th><th scope="col"><span class="series series-a" aria-hidden="true"></span>32 根螺栓</th><th scope="col"><span class="series series-b" aria-hidden="true"></span>16 根螺栓</th></tr></thead>
             <tbody>
               <tr><th scope="row">1</th><td>−0.0318</td><td>−0.091726</td></tr>
               <tr><th scope="row">2</th><td>−0.1509</td><td>−0.130675</td></tr>
@@ -84,18 +99,21 @@
             </tbody>
           </table>
         </div>
-        <p class="source">条长表示位移差值的绝对值，两组使用相同刻度。来源《Abaqus模拟情况》汇总表。</p>
+        <p class="source">条长表示绝对值，两组采用同一刻度。来源《Abaqus模拟情况》汇总表。</p>
       </section>
     </section>
 
     <aside class="settings" aria-labelledby="config-title">
-      <div class="inspector-head"><h2 id="config-title">工况参数</h2><button id="reset" class="tool-button" type="button" title="恢复 32 根基准工况"><span aria-hidden="true">↺</span> 恢复基准</button></div>
+      <div class="inspector-head">
+        <h2 id="config-title">工况参数</h2>
+        <button id="reset" class="tool-button" type="button" title="恢复 32 根基准工况"><span aria-hidden="true">↺</span> 恢复基准</button>
+      </div>
       <form id="form">
         <fieldset class="group">
           <legend>螺栓与载荷</legend>
           <div class="fields">
-            <label>螺栓数量 <span class="input"><input name="count" type="number" min="4" max="128" step="2" value="32" required aria-describedby="count-help"><span>根</span></span></label>
-            <label>水压 <span class="input"><input name="pressure" type="number" min="0.01" step="any" value="5" required><span>MPa</span></span></label>
+            <label class="key-field">螺栓数量 <span class="input"><input name="count" type="number" min="4" max="128" step="2" value="32" required aria-describedby="count-help"><span>根</span></span></label>
+            <label class="key-field">水压 <span class="input"><input name="pressure" type="number" min="0.01" step="any" value="5" required><span>MPa</span></span></label>
             <label>螺栓直径 <span class="input"><input name="diameter" type="number" min="1" step="any" value="45" required><span>mm</span></span></label>
             <label>螺栓长度 <span class="input"><input name="boltLength" type="number" min="1" step="any" value="1000" required><span>mm</span></span></label>
           </div>
@@ -126,5 +144,13 @@
   </div>
   <footer>存档回放与候选布置。工程应用需复核。</footer>
 </main>
+
+<dialog id="plot-dialog" aria-labelledby="viewer-caption">
+  <div class="viewer-toolbar">
+    <h2 id="viewer-caption">Abaqus 云图</h2>
+    <form method="dialog"><button id="close-viewer" class="tool-button" type="submit" autofocus>关闭 <span aria-hidden="true">×</span></button></form>
+  </div>
+  <div class="viewer-stage"><img id="viewer-image" src="assets/image18.png" alt="Abaqus 混凝土 Z 向位移存档云图"></div>
+</dialog>
 </body>
 </html>

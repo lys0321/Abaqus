@@ -32,6 +32,16 @@
 }
 ```
 
+## 比较不同孔数
+
+`POST /api/layout/study`
+
+```json
+{"L":1200,"W":600,"off":80,"nx":24,"ny":16,"counts":[14,32,48],"bolt_diameter_mm":45}
+```
+
+最多 12 个互不重复的候选数量。响应含 `candidate_count` 以及按数量升序的 `options`，每项的字段包括 `count`、`max_gap_mm`、`cv`、`eccentricity_mm`、`net_clearance_mm` 和 `fallback`。净距为入选孔对最短中心距减去给定外径。单孔的净距返回 `null`。
+
 ## 估算装夹附加压应力
 
 `POST /api/stress/estimate`
@@ -102,6 +112,12 @@
 ```
 
 限制判断基于规则包络网格的单元数上界，可能高于 `elements`。该检查不执行静力求解，也不替代网格收敛和接触条件验证。
+
+## 对照粗细网格
+
+`POST /api/simulation/mesh-study`
+
+请求与提交求解相同。以 `mesh_mm` 为基准，计算粗、原始、细三档，即目标尺寸的 1.5、1、0.75 倍。限制在 10–250 mm 内并去掉相同尺寸。响应为 `options` 数组，每项含 `mesh_mm` 和对应的网格预检结果。超过模型单元数限制时，真实作业接口在入队前返回 HTTP 422。网格规模对照不执行数值收敛检验。
 
 ## 提交真实求解
 

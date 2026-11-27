@@ -13,8 +13,8 @@ from fastapi.responses import FileResponse, Response
 from .abaqus.build_model import mesh_preflight
 from .jobs import Jobs, QueueFull, Settings
 from .physics import (
-    LayoutRequest, SimulationRequest, StressGeometry, StressRequest, StressSectionRequest,
-    estimate, optimize, stress_section, sweep_stress,
+    LayoutRequest, LayoutStudyRequest, SimulationRequest, StressGeometry, StressRequest, StressSectionRequest,
+    estimate, layout_study, optimize, stress_section, sweep_stress,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +55,10 @@ def create_app(settings=None):
     def layout(request: LayoutRequest):
         return optimize(request)
 
+    @app.post("/api/layout/study")
+    def study_layout(request: LayoutStudyRequest):
+        return layout_study(request)
+
     @app.post("/api/stress/estimate")
     def stress(request: StressRequest):
         return estimate(request)
@@ -77,12 +81,23 @@ def create_app(settings=None):
     def preflight(request: SimulationRequest):
         return mesh_preflight(request.model_dump())
 
+    @app.post("/api/simulation/mesh-study")
+    def study_mesh(request: SimulationRequest):
+        params = request.model_dump()
+        sizes = sorted({request.mesh_mm, round(min(250, request.mesh_mm * 1.5), 2),
+                        round(max(10, request.mesh_mm * 0.75), 2)}, reverse=True)
+        return {"options": [{"mesh_mm": size, **mesh_preflight({**params, "mesh_mm": size})}
+                            for size in sizes]}
+
     @app.post("/api/simulation/run", status_code=202)
     def submit(request: SimulationRequest, background: BackgroundTasks):
         if not jobs.settings.abaqus:
             raise HTTPException(503, "未配置有效的 ABAQUS_PATH。当前为演示模式。")
+        params = request.model_dump()
+        if not mesh_preflight(params)["within_mesh_limit"]:
+            raise HTTPException(422, "网格超过建模脚本的规模限制。请在网格对照中选用较大网格尺寸。")
         try:
-            job_id = jobs.create(request.model_dump())
+            job_id = jobs.create(params)
         except QueueFull:
             raise HTTPException(429, "作业队列已满，请稍后重试。", headers={"Retry-After": "15"})
         background.add_task(jobs.run, job_id)

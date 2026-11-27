@@ -19,19 +19,45 @@ class Hole(RequestModel):
     y_mm: Coordinate
 
 
-class LayoutRequest(RequestModel):
+class RingRequest(RequestModel):
     L: float = Field(ge=1, le=5000)
     W: float = Field(ge=1, le=5000)
     off: float = Field(ge=0, le=1000)
     nx: int = Field(ge=1, le=255)
     ny: int = Field(ge=1, le=255)
+
+    @property
+    def candidate_count(self):
+        return 2 * (self.nx + self.ny)
+
+    @model_validator(mode="after")
+    def validate_ring(self):
+        if self.candidate_count > 512:
+            raise ValueError("候选孔数最多为 512。")
+        return self
+
+
+class LayoutRequest(RingRequest):
     n: int = Field(ge=1, le=512)
 
     @model_validator(mode="after")
     def validate_counts(self):
-        count = 2 * (self.nx + self.ny)
-        if count > 512 or self.n > count:
-            raise ValueError("候选孔数最多为 512，且入选孔数不得超过候选孔数。")
+        if self.n > self.candidate_count:
+            raise ValueError("入选孔数不得超过候选孔数。")
+        return self
+
+
+BoltCount = Annotated[int, Field(ge=1, le=512)]
+
+
+class LayoutStudyRequest(RingRequest):
+    counts: list[BoltCount] = Field(min_length=1, max_length=12)
+    bolt_diameter_mm: float = Field(ge=1, le=200)
+
+    @model_validator(mode="after")
+    def validate_study(self):
+        if len(set(self.counts)) != len(self.counts) or max(self.counts) > self.candidate_count:
+            raise ValueError("孔数不可重复，且不得超过候选孔数。")
         return self
 
 
@@ -58,30 +84,44 @@ def stats(ids, points, arc, perimeter):
     }
 
 
-def optimize(request):
-    points = ring(request)
-    arc = np.r_[0., np.cumsum(np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1))]
+def ring_arcs(points):
+    return np.r_[0., np.cumsum(np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1))]
+
+
+def best_ring_layout(points, arc, count):
     perimeter = float(arc[-1])
-    step = perimeter / request.n
-    offsets = np.arange(request.n) * step
+    step = perimeter / count
+    targets = (arc[:-1, None] + np.arange(count) * step) % perimeter
+    after = np.searchsorted(arc[:-1], targets)
+    before = (after - 1) % len(points)
+    after %= len(points)
+    db = np.abs(targets - arc[before])
+    da = np.abs(targets - arc[after])
+    db = np.minimum(db, perimeter - db)
+    da = np.minimum(da, perimeter - da)
+    candidates = np.where((db < da) | ((db == da) & (before < after)), before, after)
+
     best = None
     best_score = float("inf")
-    for start in arc[:-1]:
-        targets = (start + offsets) % perimeter
-        delta = np.abs(targets[:, None] - arc[:-1])
-        indices = np.minimum(delta, perimeter - delta).argmin(axis=1)
-        if len(set(indices)) != request.n:
+    for indices in candidates:
+        if len(set(indices)) != count:
             continue
         ids = sorted(indices.tolist())
         metrics = stats(ids, points, arc, perimeter)
         score = metrics["cv"] + metrics["eccentricity_mm"] / step
         if score < best_score - 1e-12:
             best, best_score = ids, score
+    if best is None:
+        return [i * len(points) // count for i in range(count)], True
+    return best, False
 
-    fallback = best is None
-    if fallback:
-        best = [i * len(points) // request.n for i in range(request.n)]
 
+def optimize(request):
+    points = ring(request)
+    arc = ring_arcs(points)
+    perimeter = float(arc[-1])
+    step = perimeter / request.n
+    best, fallback = best_ring_layout(points, arc, request.n)
     biased = best.copy()
     occupied = set(best)
     moved = None
@@ -109,6 +149,28 @@ def optimize(request):
         "initial": initial, "biased": describe(biased), "moved": moved,
         "score": initial["cv"] + initial["eccentricity_mm"] / step, "fallback": fallback,
     }
+
+
+def layout_study(request: LayoutStudyRequest):
+    points = ring(request)
+    arc = ring_arcs(points)
+    options = []
+    for count in sorted(request.counts):
+        ids, fallback = best_ring_layout(points, arc, count)
+        clearance = None
+        if count > 1:
+            selected = points[ids]
+            distance = selected[:, None] - selected
+            matrix = np.hypot(distance[..., 0], distance[..., 1])
+            np.fill_diagonal(matrix, np.inf)
+            clearance = float(matrix.min()) - request.bolt_diameter_mm
+        options.append({
+            "count": count,
+            **stats(ids, points, arc, float(arc[-1])),
+            "net_clearance_mm": clearance,
+            "fallback": fallback,
+        })
+    return {"options": options, "candidate_count": len(points)}
 
 
 class StressGeometry(RequestModel):

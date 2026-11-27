@@ -111,10 +111,8 @@ def optimize(request):
     }
 
 
-class StressRequest(RequestModel):
+class StressGeometry(RequestModel):
     holes: list[Hole] = Field(min_length=1, max_length=512)
-    force_kn: float = Field(gt=0, le=200)
-    depth_mm: float = Field(ge=1, le=1000)
     ring_length_mm: float | None = Field(default=None, gt=0, le=12000)
     ring_width_mm: float | None = Field(default=None, gt=0, le=12000)
 
@@ -130,6 +128,11 @@ class StressRequest(RequestModel):
         ):
             raise ValueError("存在孔位超出指定孔圈。")
         return self
+
+
+class StressRequest(StressGeometry):
+    force_kn: float = Field(gt=0, le=200)
+    depth_mm: float = Field(ge=1, le=1000)
 
 
 def estimate(request):
@@ -151,6 +154,20 @@ def estimate(request):
                  "x_mm": [float(x[0]), float(x[-1])], "y_mm": [float(y[-1]), float(y[0])]},
         "method": "boussinesq_elastic_halfspace",
     }
+
+
+def sweep_stress(geometry: StressGeometry):
+    forces, depths = (5, 10, 20), (25, 50, 100)
+    cases = []
+    for depth in depths:
+        reference = estimate(StressRequest(**geometry.model_dump(), force_kn=forces[0], depth_mm=depth))
+        for force in forces:
+            cases.append({
+                "force_kn": force, "depth_mm": depth,
+                "peak_mpa": reference["peak_mpa"] * (force / forces[0]),
+                "peak_position_mm": reference["peak_position_mm"],
+            })
+    return {"cases": cases, "grid": reference["grid"], "method": reference["method"]}
 
 
 class SimulationRequest(LayoutRequest):

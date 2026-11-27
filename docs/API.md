@@ -57,6 +57,22 @@
 
 孔圈长宽同时填写或同时省略。省略时按传入孔位的坐标对称取界再外扩 60 mm。
 
+## 扫描载荷和截面深度
+
+`POST /api/stress/sweep`
+
+```json
+{"holes":[{"hole_id":"01","x_mm":0,"y_mm":0}],"ring_length_mm":240,"ring_width_mm":140}
+```
+
+返回 `cases`、`grid` 和 `method`。 `cases` 包含 25／50／100 mm 与 5／10／20 kN 的九种组合，按深度、孔力升序排列。下列为其中一个结果条目。
+
+```json
+{"force_kn":10,"depth_mm":50,"peak_mpa":1.909859317102744,"peak_position_mm":{"x":0,"y":0}}
+```
+
+调用不要求安装 Abaqus。扫描采用与单次估算相同的网格和输入约束，利用点载模型对力的线性关系复用计算。
+
 ## 提交真实求解
 
 `POST /api/simulation/run`
@@ -78,6 +94,24 @@
 ```
 
 受理返回 HTTP 202，队列已满返回 HTTP 429，求解器未配置返回 HTTP 503。输入不符合字段约束时返回 HTTP 422。
+
+## 查看最近求解任务
+
+`GET /api/simulation/jobs?limit=20`
+
+```json
+{
+  "jobs":[
+    {
+      "job_id":"5d667d6e-47a1-426a-abb4-c624beab9b66",
+      "status":"done","progress":100,"message":"求解和云图导出完成。",
+      "updated_at":1795757400,"bolt_count":2,"pressure_mpa":5
+    }
+  ]
+}
+```
+
+按提交时间倒序返回。`limit` 取 1–50，默认 20。`updated_at` 是 Unix 时间戳（秒）。可用作业编号查询状态或读取结果。未提交作业时返回空数组。
 
 ## 查询作业状态
 

@@ -7,11 +7,13 @@ import base64
 import json
 import re
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 
 from .jobs import Jobs, QueueFull, Settings
-from .physics import LayoutRequest, SimulationRequest, StressRequest, estimate, optimize
+from .physics import (
+    LayoutRequest, SimulationRequest, StressGeometry, StressRequest, estimate, optimize, sweep_stress,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "index.html"
@@ -55,6 +57,10 @@ def create_app(settings=None):
     def stress(request: StressRequest):
         return estimate(request)
 
+    @app.post("/api/stress/sweep")
+    def sweep(request: StressGeometry):
+        return sweep_stress(request)
+
     @app.get("/api/simulation/availability")
     def availability():
         available = bool(jobs.settings.abaqus)
@@ -71,6 +77,10 @@ def create_app(settings=None):
             raise HTTPException(429, "作业队列已满，请稍后重试。", headers={"Retry-After": "15"})
         background.add_task(jobs.run, job_id)
         return {"job_id": job_id, "status": "queued", "progress": 0}
+
+    @app.get("/api/simulation/jobs")
+    def recent_jobs(limit: int = Query(20, ge=1, le=50)):
+        return {"jobs": jobs.recent(limit)}
 
     @app.get("/api/simulation/{job_id}/status")
     def status(job_id: UUID):

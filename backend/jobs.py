@@ -95,6 +95,22 @@ class Jobs:
                        (job_id, "任务已排队。", now, now, json.dumps(params, allow_nan=False)))
         return job_id
 
+    def recent(self, limit):
+        with self.connect() as db:
+            rows = db.execute("""
+                SELECT id, status, progress, message, updated, parameters FROM jobs
+                ORDER BY created DESC, id DESC LIMIT ?
+            """, (limit,)).fetchall()
+        jobs = []
+        for row in rows:
+            params = json.loads(row["parameters"])
+            jobs.append({
+                "job_id": row["id"], "status": row["status"], "progress": row["progress"],
+                "message": row["message"], "updated_at": row["updated"],
+                "bolt_count": params["n"], "pressure_mpa": params["pressure_mpa"],
+            })
+        return jobs
+
     def get(self, job_id):
         with self.connect() as db:
             row = db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()

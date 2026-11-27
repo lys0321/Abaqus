@@ -73,6 +73,18 @@
 
 调用不要求安装 Abaqus。扫描采用与单次估算相同的网格和输入约束，利用点载模型对力的线性关系复用计算。
 
+## 计算深度剖面
+
+`POST /api/stress/section`
+
+```json
+{"holes":[{"hole_id":"01","x_mm":0,"y_mm":0}],"force_kn":10,"axis":"x","slice_mm":0,"ring_length_mm":240,"ring_width_mm":140}
+```
+
+`axis` 取 `x` 或 `y`。`slice_mm` 是另一条水平轴上固定的坐标，单位 mm。沿指定轴覆盖孔圈并外扩 60 mm，深度从 10 mm 到 160 mm。响应包括 `axis`、`slice_mm`、`lateral_mm` 和 `depth_mm` 两组坐标范围、`columns: 121`、`rows: 61`、`values_mpa` 与 `peak_mpa`。矩阵从浅到深排列，每行按水平坐标升序排列。上例的峰值约为 47.746483 MPa。
+
+该接口和应力估算使用相同的 Boussinesq 集中力叠加模型，可在无 Abaqus 的环境运行。
+
 ## 提交前检查网格与加载
 
 `POST /api/simulation/preflight`

@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="沧砼鉴高水压装夹工作台。设计水腔与孔圈、比较螺栓布局、查看装夹附加应力估算和 Abaqus 存档。">
 <title>高水压装夹工作台 | 沧砼鉴</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAzklEQVR4nGNUtYhmoCVgoqnpDKMWEAFGWhzs2zQXThIJGInPB/tQzXXyS6aaBftgRsMNxRQhP4j2YTML0yZyfECMM/cRUoPdAmR3OREKBPyKsVhAfPgSo2sgfECPOCDGiH3EhSThZOqELUUSH084fVBR19HRVIHVyViNxlSPzwcVdR1wEs1EZBK/esJxANfQgc1pRKrBFwdwPRXYnEakC4gq7CowDCLGaBLqgw5Uc4k3nbT6gIFEo8mp0TrA5hJvOsk+GPqVPhlg1AIGQgAAARJ3MpUKn70AAAAASUVORK5CYII=">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAzUlEQVR4nO2VMQ6DMAxFQw/D1I09G6zcgSVnytI7dIXNJ0NCwgJi4p8IilDxkAHZz992govqXZoz7XUq3TwJAPu3GVD/5RO0An8HtObapj0sAc1ohoZf8ltEEivMlFMBIpM0HznBUpfVmhB3FhLg/UWirqjgFzNAEIR1Ur+mVrqR+Jx2K/Bd7T6DKFlEh/6xCnxX87khLs+4vz4DDnCSNNAnNgOO8ZI0UAH0s/MBCEEn7AO35uL0tH1gEtE5G81NXJyeXMH9l36GPQmMZiMb53PMZm9lqQAAAABJRU5ErkJggg==">
 <style>
 
 :root {
   color-scheme: light;
-  --paper:#eff1f5; --sheet:#ffffff; --plot:#f7f8fc; --text:#1b2433;
-  --muted:#4e5c73; --quiet:#59677c; --line:#dce2ec; --strong-line:#c7d0df;
-  --mint:#315caa; --mint-dark:#254986; --wash:#edf3ff;
-  --peak:#a1472b; --amber-wash:#fff1e9; --rail:#1e2533; --rail-line:#3b4658;
-  --display:"Aptos Display", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
---font: "Aptos", "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
-  --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  --paper:#f4f1eb; --sheet:#fdfbf7; --plot:#f8f5ef; --text:#292621;
+  --muted:#605952; --quiet:#726961; --line:#e1d9cf; --strong-line:#cdc3b6;
+  --mint:#943d2d; --mint-dark:#783123; --wash:#f2e6dd;
+  --peak:#963a27; --amber-wash:#f7e9dc; --rail:#ede7dd; --rail-line:#d9d0c3;
+  --data-secondary:#526560; --stage:#282522; --stage-line:#60574e;
+  --display:"Aptos Display", "Microsoft YaHei UI", "PingFang SC", sans-serif;
+
+  --font:"Aptos","PingFang SC","Microsoft YaHei UI","Noto Sans CJK SC",sans-serif;
+  --mono:"Cascadia Mono","SFMono-Regular",Consolas,monospace;
 }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -331,7 +333,7 @@ dialog::backdrop { background:#19243877; }
 .layer-group input { accent-color:var(--mint); margin:0; }
 .explode-control { margin-left:auto; }
 .explode-control input { width:72px; }
-.stage-plate:fullscreen,.stage-plate.viewer-full { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; max-width:none; background:var(--sheet); }
+.stage-plate:fullscreen,.stage-plate.viewer-full { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto auto; max-width:none; background:var(--sheet); }
 .stage-plate:fullscreen .assembly-stage,.stage-plate.viewer-full .assembly-stage { height:auto; }
 .stage-plate.viewer-full { position:fixed; z-index:4; inset:0; }
 .tool-panel { margin-top:20px; }
@@ -368,6 +370,123 @@ dialog::backdrop { background:#19243877; }
   .mini-stats output { font-size:13px; }
   .layer-group { gap:3px 6px; }
   .explode-control { margin-left:0; }
+}
+body { background:var(--paper); }
+.top { border-bottom-color:var(--strong-line); background:var(--sheet); }
+.mark { background:#332c26; border-radius:2px; }
+.mark::before,.mark::after { border-color:#f6e7d8; }
+.top-inner { min-height:68px; }
+.app-grid { grid-template-columns:205px minmax(0,1fr); }
+.rail { border-color:var(--strong-line); }
+.rail-title,.rail .eyebrow,.rail .spec,.rail .step-no { color:var(--quiet); }
+.rail-context { border-color:var(--strong-line); }
+.rail-context output { color:var(--text); }
+.workflow a { color:var(--text); border-radius:2px; }
+.workflow a:hover { background:#f5efe6; }
+.workflow a[aria-current="page"] { color:var(--mint-dark); background:#faf5ed; border-color:#dcd0c1; box-shadow:inset 2px 0 var(--mint); }
+.workflow a[aria-current="page"] .step-no,.workflow a[aria-current="page"] .rail-arrow { color:var(--mint-dark); }
+.work-head h1 { color:#28241f; font-size:clamp(34px,4.7vw,68px); font-weight:680; letter-spacing:-.074em; }
+.work-head { margin-bottom:24px; }
+.work-head .stamp { color:var(--mint); }
+.stamp { letter-spacing:.11em; }
+.button { border-radius:3px; }
+.button:hover { border-color:#b79786; }
+.field input,.field select { background:#fffdf9; border-radius:3px; }
+.sheet,.plate { border:1px solid var(--strong-line); border-radius:3px; }
+.sheet { box-shadow:0 1px 0 #fffcf5; }
+.stage-plate { border-radius:3px 3px 0 0; }
+.stage-plate .plate-head::before { content:""; display:block; height:17px; width:3px; background:var(--mint-dark); flex:none; }
+.stage-plate .plate-head h2 { margin-right:auto; }
+.metrics { background:#ece4d8; border-color:var(--strong-line); border-radius:0 0 3px 3px; }
+.metrics > div + div, .plate-foot { border-color:var(--strong-line); }
+thead th { background:#eee9df; }
+dialog,.js-toast { box-shadow:0 16px 48px #342b2138; }
+dialog::backdrop { background:#302a2477; }
+.swatch.candidate { background:#7d7165; }
+.swatch.water { background:#819791; border-color:#59716a; }
+.swatch.bolt { background:#b66b41; }
+.swatch.rehearsed { background:#739480; }
+.assembly-stage { background-color:#272420; background-image:radial-gradient(ellipse at 51% 39%,#403932 0%,#2c2924 62%,#282521 86%); }
+.assembly-stage::before { background-image:radial-gradient(circle at center,#d4ba9c39 0 1px,transparent 1px); background-size:23px 23px; }
+.stage-info,.stage-info .spec { color:#f0e1d2; }
+.stage-info::before { border-color:#e3ae8a; }
+.stage-tools .button { border-color:#786d62; background:#37302a; color:#fff5e9; box-shadow:0 4px 10px #1a1612a0; }
+.stage-tools .button:hover,.stage-tools .button[aria-pressed="true"] { background:#574334; }
+.assembly-stage :focus-visible { outline-color:#f0b284; }
+.bolt-tag { color:#f5cba5; background:#322a24; border-color:#e3a66d90; }
+.mini-stats > div { background:#f4eee4; }
+.bolt-pair { background:#eee5da; }
+.archive-pair img { background:#283243; }
+.control-panel { padding:14px 15px; border:1px solid var(--strong-line); background:var(--sheet); }
+.instrument-split { display:grid; grid-template-columns:minmax(0,1fr) minmax(238px,.44fr); align-items:start; gap:16px; }
+.instrument-split > * { min-width:0; }
+.instrument-canvas { width:100%; height:250px; margin:8px 0; border:1px solid var(--strong-line); border-radius:2px; background:var(--plot); }
+#gap-chart { height:178px; cursor:crosshair; }
+#depth-section-canvas { height:300px; cursor:crosshair; }
+#sensor-map { height:277px; cursor:crosshair; }
+.instrument-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px 13px; }
+.instrument-controls .field { min-width:100px; }
+.scrub-row { display:grid; align-items:center; grid-template-columns:auto minmax(0,1fr) minmax(72px,auto); gap:9px; min-width:0; margin:7px 0; }
+.scrub-row input[type=range] { min-width:0; margin:0; }
+.scrub-row output { font-size:11px; color:var(--mint-dark); text-align:right; white-space:nowrap; }
+.sequence-play { background:#f2eadd; padding:7px 10px; border-top:1px solid var(--strong-line); }
+.sequence-play .scrub-row { margin:0; }
+.sequence-play .button { min-height:29px; }
+.flag-row { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0 4px; }
+.flag-row .button { min-height:29px; }
+.stage-status { margin-top:5px; }
+.sensor-list { max-height:227px; overflow:auto; margin-top:6px; }
+.sensor-list td:nth-child(2),.sensor-list td:nth-child(4) { font-family:var(--font); }
+.sensor-list th,.sensor-list td { padding:4px 5px; }
+.sensor-list td:last-child button { min-height:27px; padding:2px 5px; }
+.series-legend { display:flex; flex-wrap:wrap; gap:6px 17px; margin:4px 0; color:var(--muted); font-size:12px; }
+.series-legend span { display:flex; align-items:center; gap:5px; }
+.series-legend span::before { content:""; width:10px; height:2px; background:var(--mint); }
+.series-legend span:nth-child(2)::before { background:var(--data-secondary); }
+#trial-compare-table { margin:6px 0; }
+#trial-compare-table td, #trial-compare-table th { white-space:nowrap; }
+.instrument-table { overflow:auto; }
+#response-channel { width:min(180px,100%); }
+#trace-response[hidden] { display:none; }
+.scope-tag { color:var(--muted); font-size:11px; font-family:var(--mono); }
+.trace-import .note,.instrument-split .note { margin-top:7px; }
+@media (max-width:1130px) { .app-grid { grid-template-columns:174px minmax(0,1fr); } }
+@media (max-width:880px) {
+  .rail { top:69px; }
+  .workflow a[aria-current="page"] { box-shadow:inset 0 -2px var(--mint); }
+  .instrument-split { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:640px) {
+  .top-inner { min-height:60px; }
+  .rail { top:61px; }
+  .work-head h1 { font-size:41px; }
+  .work-head { margin-bottom:14px; }
+  .scrub-row { gap:5px; grid-template-columns:auto minmax(0,1fr) minmax(55px,auto); }
+  .scrub-row output { font-size:10px; }
+  .scrub-row .button { padding-inline:5px; font-size:11px; }
+  .instrument-canvas,#depth-section-canvas { height:232px; }
+  #sensor-map { height:223px; }
+  #trial-compare-table td,#trial-compare-table th { padding-inline:4px; }
+}
+
+.main { padding-top:28px; }
+.work-head { margin-bottom:14px; }
+.tool-links {
+  margin:0 0 17px; display:flex; flex-wrap:wrap; gap:0 12px; align-items:center;
+  border-block:1px solid var(--strong-line);
+}
+.tool-links button {
+  padding:6px 1px; min-height:30px; border:0; background:transparent; color:var(--muted);
+  font-size:11px; transition:color .16s; text-underline-offset:4px; text-align:left;
+}
+.tool-links button:hover { color:var(--mint-dark); text-decoration:underline; }
+.workspace :is(.plate,.sheet,.assembly-stage) { scroll-margin-top:90px; }
+.mini-stats:has(> div:only-child) { grid-template-columns:minmax(0,1fr); }
+@media (max-width:880px) { .workspace :is(.plate,.sheet,.assembly-stage) { scroll-margin-top:127px; } }
+@media (max-width:640px) {
+  .main { padding-top:18px; }
+  .tool-links { gap:0 7px; margin-bottom:11px; }
+  .tool-links button { font-size:10px; }
 }
 </style>
 </head>
@@ -406,6 +525,12 @@ dialog::backdrop { background:#19243877; }
         <div><p class="stamp">01 / GEOMETRY</p><h1 id="assembly-page" tabindex="-1">孔位设计</h1><p>检查水腔、法兰与孔圈，在三维视口核对孔位和安装净距。</p></div>
         <a class="button primary" href="#stress">进入应力实验室 <span aria-hidden="true">→</span></a>
       </header>
+      <nav class="tool-links" aria-label="当前工作区工具">
+        <button type="button" data-tool="assembly-stage">三维与装配播放</button>
+        <button type="button" data-tool="coordinates-title">孔位坐标</button>
+        <button type="button" data-tool="install-title">安装净距</button>
+        <button type="button" data-tool="gap-title">周向间距图</button>
+      </nav>
       <div class="bench layout-bench">
         <div>
           <figure class="plate stage-plate" id="assembly-plate">
@@ -440,11 +565,19 @@ dialog::backdrop { background:#19243877; }
               </div>
               <label class="explode-control">爆炸视图<input type="range" id="explode" min="0" max="100" value="0"><output id="explode-value">0%</output></label>
             </div>
+            <div class="sequence-play">
+              <div class="scrub-row">
+                <button type="button" class="button" id="bolt-play" aria-pressed="false">播放装配顺序</button>
+                <input type="range" id="bolt-scrub" min="0" max="1000" value="0" aria-label="装配顺序进度">
+                <output id="bolt-phase" for="bolt-scrub">0 / 32</output>
+              </div>
+            </div>
             <figcaption class="plate-foot">
               <div class="plot-legend">
                 <span class="key"><i class="swatch bolt" aria-hidden="true"></i>选用螺栓</span>
                 <span class="key"><i class="swatch candidate" aria-hidden="true"></i>备选孔</span>
                 <span class="key"><i class="swatch water" aria-hidden="true"></i>水腔</span>
+                <span class="key" id="rehearsed-legend" hidden><i class="swatch rehearsed" aria-hidden="true"></i>已演练孔</span>
               </div>
               <span class="spec" id="view-caption">轴测</span>
               <span class="key viewer-help" id="viewer-help">拖拽旋转 · 滚轮或捏合缩放 · Shift 拖拽平移 · 方向键可旋转</span>
@@ -544,6 +677,11 @@ dialog::backdrop { background:#19243877; }
           </div>
         </div>
       </section>
+      <section class="sheet tool-panel" aria-labelledby="gap-title">
+        <div class="section-head"><h2 id="gap-title">沿孔圈检查间距</h2><span class="scope-tag">周向间距 / mm</span></div>
+        <canvas class="instrument-canvas" id="gap-chart" role="img" aria-label="沿孔圈的相邻螺栓间距条形图"></canvas>
+        <p class="note" id="gap-detail">点击条形定位该段的起始孔。虚线表示平均周向间距。</p>
+      </section>
     </section>
 
     <section class="workspace" id="stress" aria-labelledby="stress-page" hidden>
@@ -551,6 +689,12 @@ dialog::backdrop { background:#19243877; }
         <div><p class="stamp">02 / STRESS LAB</p><h1 id="stress-page" tabindex="-1">应力实验室</h1><p>估算螺栓夹持力产生的附加压应力，探查截面或比较载荷组合。</p></div>
         <a class="button primary" href="#simulation">进入求解控制台 <span aria-hidden="true">→</span></a>
       </header>
+      <nav class="tool-links" aria-label="当前工作区工具">
+        <button type="button" data-tool="stress-title">截面云图</button>
+        <button type="button" data-tool="sweep-title">载荷扫描</button>
+        <button type="button" data-tool="profile-title">应力剖线</button>
+        <button type="button" data-tool="depth-map-title">深度传播</button>
+      </nav>
       <div class="bench">
         <figure class="plate" aria-labelledby="stress-title">
           <div class="plate-head"><h2 id="stress-title">装夹附加应力估算</h2><button type="button" class="button" id="save-png">导出 PNG <span aria-hidden="true">↓</span></button></div>
@@ -598,6 +742,18 @@ dialog::backdrop { background:#19243877; }
         <p id="profile-note" class="note">剖线穿过当前应力探针。无探针时取中心截面。</p>
         <canvas class="line-chart" id="profile-chart" role="img" aria-label="截面应力剖线"></canvas>
       </section>
+      <section class="sheet tool-panel" aria-labelledby="depth-map-title">
+        <div class="section-head"><h2 id="depth-map-title">夹持应力沿深度传播</h2><span id="depth-map-mode" class="scope-tag">X–Z 剖面</span></div>
+        <div class="instrument-split">
+          <div><canvas class="instrument-canvas" id="depth-section-canvas" role="img" aria-label="Boussinesq 模型应力沿试件深度传播的剖面和深度游标"></canvas></div>
+          <div class="control-panel">
+            <div class="scrub-row"><button class="button" type="button" id="depth-map-play" aria-pressed="false">播放深度</button><input type="range" min="0" max="1000" value="100" id="depth-map-scrub" aria-label="扫查深度"><output id="depth-map-read">25 mm</output></div>
+            <dl class="mini-stats"><div><dt>游标压应力</dt><dd><output id="depth-map-value">—</output></dd></div></dl>
+            <p class="note" id="depth-map-note">点击剖面可读取位置与深度，方向与当前 X／Y 剖线一致。</p>
+            <p class="note">同一剖面使用固定色标。深度从加载面向下，结果沿用弹性半空间假设。</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section class="workspace" id="simulation" aria-labelledby="simulation-page" hidden>
@@ -605,6 +761,12 @@ dialog::backdrop { background:#19243877; }
         <div><p class="stamp">03 / SOLVER</p><h1 id="simulation-page" tabindex="-1">求解控制台</h1><p>提交 Abaqus/Standard 作业，查看进度和已经完成的求解记录。</p></div>
         <a class="button" href="#history">查看云图阅览室 <span aria-hidden="true">→</span></a>
       </header>
+      <nav class="tool-links" aria-label="当前工作区工具">
+        <button type="button" data-tool="preflight-title">网格核查</button>
+        <button type="button" data-tool="rehearsal-title">加载演练</button>
+        <button type="button" data-tool="sensor-title">采集通道</button>
+        <button type="button" data-tool="job-list-title">求解记录</button>
+      </nav>
       <div class="bench">
         <section class="sheet" aria-labelledby="solver-inputs">
           <h2 id="solver-inputs">有限元模型设置</h2>
@@ -656,7 +818,7 @@ dialog::backdrop { background:#19243877; }
           </div>
           <canvas class="line-chart" id="protocol-chart" role="img" aria-label="升压、保压和卸压的三段时间曲线"></canvas>
           <p class="note" id="protocol-note"></p>
-          <p class="note">时长为可编辑演示值。计划与试验复盘联动，不下发到 PLC，也不改变 Abaqus 的静力载荷步。</p>
+          <p class="note">时长为可编辑演示值。计划与采集回放联动，用于演练与记录。Abaqus 保持静力加载。</p>
         </section>
         <section class="sheet" aria-labelledby="preflight-title">
           <div class="section-head"><h2 id="preflight-title">提交前网格核查</h2><button class="button" type="button" id="run-preflight">检查当前模型</button></div>
@@ -669,12 +831,46 @@ dialog::backdrop { background:#19243877; }
           <p class="note">估计值用于识别网格过密，未检查材料、接触或模型的物理有效性。</p>
         </section>
       </div>
+      <section class="sheet tool-panel" aria-labelledby="rehearsal-title">
+        <div class="section-head"><h2 id="rehearsal-title">加载全过程演练</h2><span class="scope-tag">计划曲线 · 模拟播放</span></div>
+        <div class="instrument-split">
+          <canvas class="instrument-canvas" id="rehearsal-canvas" role="img" aria-label="水箱加载示意，显示当前计划压力和阶段"></canvas>
+          <div class="control-panel">
+            <div class="scrub-row"><button class="button" type="button" id="rehearsal-play" aria-pressed="false">播放加载</button><input type="range" min="0" max="1000" value="0" id="rehearsal-scrub" aria-label="加载阶段时间游标"><output id="rehearsal-time">0 s</output></div>
+            <div class="flag-row" aria-label="跳到加载阶段"><button class="button" type="button" data-stage="ramp">升压</button><button class="button" type="button" data-stage="hold">保压</button><button class="button" type="button" data-stage="release">卸压</button></div>
+            <dl class="mini-stats"><div><dt>阶段</dt><dd><output id="rehearsal-stage">—</output></dd></div><div><dt>水压</dt><dd><output id="rehearsal-pressure">—</output></dd></div><div><dt>合力</dt><dd><output id="rehearsal-force">—</output></dd></div></dl>
+            <p class="note stage-status">按当前计划加速播放。水箱色块和箭头随压力变化。</p>
+          </div>
+        </div>
+      </section>
+      <section class="sheet tool-panel" aria-labelledby="sensor-title">
+        <div class="section-head"><h2 id="sensor-title">采集通道布置</h2><div class="group"><button class="button" id="sensor-preset" type="button">添加布置示例</button><button class="button" id="sensor-export" type="button">导出通道 CSV ↓</button></div></div>
+        <div class="instrument-split">
+          <div><canvas class="instrument-canvas" id="sensor-map" role="img" aria-label="水腔俯视图及多源采集测点"></canvas><p class="note" id="sensor-note" role="status">点击水腔内位置取坐标。位置相对于水腔中心。</p></div>
+          <div class="control-panel">
+            <div class="fields">
+              <label class="field">类型<select id="sensor-kind"><option value="pressure">水压</option><option value="dic">DIC 测区</option><option value="ae">声发射 AE</option><option value="strain">应变</option><option value="fiber">光纤应变</option></select></label>
+              <label class="field">通道编号<input id="sensor-name" maxlength="24" placeholder="留空自动编号"></label>
+              <label class="field">X mm<input id="sensor-x" type="number" step="any" value="0"></label>
+              <label class="field">Y mm<input id="sensor-y" type="number" step="any" value="0"></label>
+            </div>
+            <div class="flag-row"><button class="button primary" type="button" id="sensor-add">添加通道</button></div>
+            <div class="sensor-list"><table aria-label="已设置的采集通道"><thead><tr><th>编号</th><th>类型</th><th>坐标 mm</th><th>管理</th></tr></thead><tbody id="sensor-rows"></tbody></table></div>
+            <p class="note">工况快照可保存这些布置点。示例点位用于演示记录，安装位置以实际布线和观测面为准。</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section class="workspace" id="history" aria-labelledby="history-page" hidden>
       <header class="work-head">
         <div><p class="stamp">04 / CONTOURS</p><h1 id="history-page" tabindex="-1">云图阅览室</h1><p>查阅 Abaqus S33 历史云图和当前求解结果。</p></div>
       </header>
+      <nav class="tool-links" aria-label="当前工作区工具">
+        <button type="button" data-tool="history-title">S33 云图</button>
+        <button type="button" data-tool="archive-compare-title">并排对照</button>
+        <button type="button" data-tool="replay-title">采集回放</button>
+      </nav>
       <div class="bench">
         <figure class="plate">
           <div class="plate-head"><h2 id="history-title">Abaqus 历史结果 / 5 MPa / Z 向正应力 S33</h2></div>
@@ -727,11 +923,19 @@ dialog::backdrop { background:#19243877; }
       <section class="sheet tool-panel" aria-labelledby="replay-title">
         <div class="section-head">
           <h2 id="replay-title">压力采集回放</h2>
-          <div class="group"><button class="button" id="trace-template" type="button">下载 CSV 示例</button><button class="button primary" id="choose-trace" type="button">导入采集 CSV ↑</button></div>
+          <div class="group"><button class="button" id="trace-template" type="button">下载 CSV 示例</button><button class="button" id="trace-example" type="button">载入示例数据</button><button class="button primary" id="choose-trace" type="button">导入采集 CSV ↑</button></div>
         </div>
         <input type="file" id="trace-file" accept=".csv,text/csv" hidden>
-        <p class="note" id="trace-note" role="status">支持采集文件 t_s,pressure_mpa。时间以试验起始为 0，严格递增。导入后可叠加当前水压计划。</p>
+        <p class="note" id="trace-note" role="status">首两列为 t_s,pressure_mpa，后面可加位移、应变、声发射或光纤通道。导入后以共同时间游标回放。</p>
         <div id="trace-results" hidden>
+          <div id="trace-player" class="control-panel trace-import" hidden>
+            <div class="scrub-row"><button class="button" type="button" id="trace-play" aria-pressed="false">播放采集</button><input type="range" min="0" max="1000" value="0" id="trace-scrub" aria-label="采集回放时间"><output id="trace-time">0 s</output></div>
+            <dl class="mini-stats"><div><dt>当前实测压力</dt><dd><output id="trace-current">—</output></dd></div><div><dt>与计划差值</dt><dd><output id="trace-difference">—</output></dd></div><div><dt>响应读数</dt><dd><output id="trace-response-value">—</output></dd></div></dl>
+            <div id="trace-response" hidden>
+              <label class="field">同步响应通道<select id="response-channel"></select></label>
+              <canvas id="response-chart" class="line-chart" role="img" aria-label="与压力采集同步的响应曲线"></canvas>
+            </div>
+          </div>
           <canvas class="line-chart" id="trace-chart" role="img" aria-label="实测水压和计划水压随时间变化"></canvas>
           <dl class="mini-stats"><div><dt>实测最高压力</dt><dd><output id="trace-max">—</output></dd></div><div><dt>保压段末－初</dt><dd><output id="trace-delta">—</output></dd></div><div><dt>采集点</dt><dd><output id="trace-count">—</output></dd></div></dl>
           <p class="note">保压段的两端在实测曲线上线性插值。以实测时间覆盖为前提，变化量本身不能判定泄漏原因。</p>
@@ -744,6 +948,11 @@ dialog::backdrop { background:#19243877; }
         <div><p class="stamp">05 / SCENARIOS</p><h1 id="scenarios-page" tabindex="-1">工况档案</h1><p>存储可复用的参数快照，也可以将 JSON 发给其他试验人员。</p></div>
         <a class="button" href="#assembly">返回孔位设计 <span aria-hidden="true">→</span></a>
       </header>
+      <nav class="tool-links" aria-label="当前工作区工具">
+        <button type="button" data-tool="snapshot-list-title">工况快照</button>
+        <button type="button" data-tool="delta-title">参数差异</button>
+        <button type="button" data-tool="trial-compare-title">A／B 联动预演</button>
+      </nav>
       <div class="bench">
         <section class="sheet" aria-labelledby="snapshot-list-title">
           <div class="section-head"><h2 id="snapshot-list-title">已保存工况</h2><button class="button" type="button" id="import-snapshot">导入 JSON</button></div>
@@ -770,6 +979,20 @@ dialog::backdrop { background:#19243877; }
         </div>
         <p class="note" id="delta-note" role="status">先保存或导入快照，即可逐项对比参数。</p>
         <div class="delta-table" id="delta-table" hidden><table><thead><tr><th scope="col">参数</th><th scope="col">基准</th><th scope="col">对照</th><th scope="col">差异</th></tr></thead><tbody id="delta-rows"></tbody></table></div>
+      </section>
+      <section class="sheet tool-panel" aria-labelledby="trial-compare-title">
+        <div class="section-head"><h2 id="trial-compare-title">工况 A／B 联动预演</h2><span class="scope-tag">沿用上方基准与对照</span></div>
+        <div class="instrument-split">
+          <div>
+            <canvas id="trial-compare-chart" class="instrument-canvas" role="img" aria-label="两组试验计划在同一时间坐标上的压力曲线"></canvas>
+            <div class="series-legend"><span id="trial-label-a">A · 基准</span><span id="trial-label-b">B · 对照</span></div>
+          </div>
+          <div class="control-panel">
+            <div class="scrub-row"><button class="button" type="button" id="trial-play" aria-pressed="false">播放对照</button><input id="trial-scrub" type="range" min="0" max="1000" value="0" aria-label="两工况共同时间"><output id="trial-time">0 s</output></div>
+            <div class="instrument-table"><table id="trial-compare-table"><thead><tr><th>指标</th><th>基准 A</th><th>对照 B</th></tr></thead><tbody id="trial-metrics"></tbody></table></div>
+            <p class="note">时间游标同时读取两个方案。全程结束后该方案保持卸载。周向间距来自各工况的孔位重算。</p>
+          </div>
+        </div>
       </section>
     </section>
   </main>
@@ -800,8 +1023,8 @@ const mono = color('mono');
 const theme = {
   plot: color('plot'), mint: color('mint'), peak: color('peak'),
   ink: color('text'), muted: color('muted'), quiet: color('quiet'),
-  dimension: '#7d8da7',
-  outline: '#8191ab',
+  dimension: '#8d8073',
+  outline: '#938578',
 };
 
 // 候选孔索引从 0 开始，沿给定的下、右、上、左四条边编号。
@@ -1055,7 +1278,7 @@ function drawPlotGrid(context, width, height) {
   for (let x = (width / 2) % minor; x < width; x += minor) {
     for (let y = (height / 2) % minor; y < height; y += minor) {
       context.fillStyle = Math.abs(x - width / 2) % 100 < 1 && Math.abs(y - height / 2) % 100 < 1
-        ? '#b7c4dd' : '#dce4f1';
+        ? '#c4b6a5' : '#e4dacf';
       context.fillRect(x, y, 1.15, 1.15);
     }
   }
@@ -1063,7 +1286,7 @@ function drawPlotGrid(context, width, height) {
     [12, 12, 1, 1], [width - 12, 12, -1, 1],
     [12, height - 12, 1, -1], [width - 12, height - 12, -1, -1],
   ]) {
-    path(context, [[x, y + dy * 10], [x, y], [x + dx * 10, y]], { stroke: '#aebcb0', close: false });
+    path(context, [[x, y + dy * 10], [x, y], [x + dx * 10, y]], { stroke: '#b8ab9a', close: false });
   }
 }
 
@@ -1184,8 +1407,8 @@ const viewer = (() => {
     const faces = [], lines = [];
     const light = unit([-3,-4,7]);
     const palette = {
-      plate: [.56,.61,.70], flange: [.28,.37,.51], water: [.14,.40,.69],
-      bolt: [.82,.59,.34], wire: [.52,.63,.80],
+      plate: [.64,.59,.52], flange: [.43,.39,.34], water: [.29,.42,.39],
+      bolt: [.80,.56,.34], wire: [.64,.55,.43],
     };
     function face(points, base) {
       const normal = cross(sub(points[1],points[0]),sub(points[2],points[0]));
@@ -1221,7 +1444,7 @@ const viewer = (() => {
       ring(inner[0].slice().reverse(),inner[1].slice().reverse(),palette.flange);
       for (const boundary of [outer[1],inner[1]]) {
         const edgeLine = boundary.map(([x,y,z]) => [x,y,z+extent*.00025]);
-        wire([...edgeLine,edgeLine[0]],[.45,.56,.71]);
+        wire([...edgeLine,edgeLine[0]],[.61,.53,.45]);
       }
       for (let i = 0; i < 4; i++) {
         const j = (i+1) % 4;
@@ -1240,7 +1463,7 @@ const viewer = (() => {
             model.width*((row/9 - .5)*.88 + Math.sin(t*29 + row*.43)*.008),
             waterZ + extent*.0004];
         });
-        wire(wave,[.42,.70,.93]);
+        wire(wave,[.57,.72,.66]);
       }
     }
     const anchors = [];
@@ -1257,13 +1480,13 @@ const viewer = (() => {
           if (!settings.flange) continue;
           const radius = Math.min(5,Math.min(model.ringL,model.ringW)*.009);
           const loop = circle(x,y,spread+flangeT+extent*.0012,radius,10);
-          wire([...loop,loop[0]],[.61,.69,.82]);
+          wire([...loop,loop[0]],[.64,.57,.48]);
           continue;
         }
         const cylinderTop = headBase + diameter*.10;
         prism((z,s) => circle(x,y,z,s,8), [[headBase-diameter*.33,boltRadius*.54],
           [cylinderTop,boltRadius*.54]],palette.flange);
-        const material = order === state.hole ? [1,.77,.44] : palette.bolt;
+        const material = order === state.hole ? [1,.79,.52] : sequenceComplete.has(id) ? [.54,.72,.60] : palette.bolt;
         prism((z,s) => circle(x,y,z,s,6),
           [[cylinderTop,boltRadius*.80],[cylinderTop+diameter*.035,boltRadius],
             [boltTop-diameter*.055,boltRadius],[boltTop,boltRadius*.78]],material);
@@ -1393,7 +1616,7 @@ const viewer = (() => {
     };
     const shape = [model.length,model.width,model.ringL,model.ringW,settings.thickness,settings.flangeT,
       settings.lip,settings.edge,settings.diameter,settings.explosion].join('|');
-    const key = [shape,readNumber('nx'),readNumber('ny'),layout.ids.join(','),state.hole,
+    const key = [shape,readNumber('nx'),readNumber('ny'),layout.ids.join(','),state.hole,sequenceCount,
       settings.plate,settings.flange,settings.water,settings.bolts].join('|');
     if (key !== meshKey) {
       mesh = makeScene(model,layout,settings);
@@ -1654,7 +1877,10 @@ function queuePaint() {
   if (animationFrame) return;
   animationFrame = requestAnimationFrame(() => {
     animationFrame = 0;
-    if (!$('assembly').hidden) viewer.render(activeModel,activeLayout);
+    if (!$('assembly').hidden) {
+      viewer.render(activeModel,activeLayout);
+      paintSpacing();
+    }
     if (!$('stress').hidden) {
       if (activeEstimate) renderStress(activeModel,activeLayout,activeEstimate);
       else {
@@ -1664,8 +1890,14 @@ function queuePaint() {
         canvas.setAttribute('aria-label', '参数无效，暂无结果');
       }
       paintProfile();
+      paintDepthMap();
     }
-    if (!$('simulation').hidden) paintProtocol();
+    if (!$('simulation').hidden) {
+      paintProtocol();
+      paintRehearsal();
+      paintSensors();
+    }
+    if (!$('scenarios').hidden) paintTrialCompare();
     if (!$('history').hidden) renderTrace();
   });
 }
@@ -1695,6 +1927,8 @@ function refreshModel() {
     updateSweep(null);
     updatePreflight(null);
     renderInstallation();
+    syncBolts(null);
+    renderSensorTable();
     renderScenarioDelta();
     for (const id of [
       'ring', 'area', 'thrust', 'count-value', 'candidate-count', 'compare-count',
@@ -1714,6 +1948,8 @@ function refreshModel() {
   renderMetrics(model, layouts);
   renderHoles(activeLayout);
   renderInstallation();
+  syncBolts(activeLayout);
+  renderSensorTable();
   updateSweep(model, activeLayout);
   refreshEstimate();
 }
@@ -1972,6 +2208,7 @@ const workspaceId = () => location.hash.slice(1);
 function showWorkspace({ focus = false } = {}) {
   const target = workspaces.find(page => page.id === workspaceId()) ?? workspaces[0];
   if (target.id === currentWorkspace) return;
+  pauseTimelines();
   currentWorkspace = target.id;
   for (const page of workspaces) page.hidden = page !== target;
   for (const link of routeLinks) {
@@ -2222,6 +2459,7 @@ function validScenario(item) {
   if (item?.version !== 1 || typeof item.name !== 'string' || !item.name.trim() || item.name.length > 60 ||
       !Number.isFinite(Date.parse(item.savedAt)) || !['uniform', 'bias'].includes(item.scheme) ||
       !['iso', 'plan', 'bottom'].includes(item.view) || !item.values) return false;
+  if ('channels' in item && !validSensorPlan(item.channels)) return false;
   const fields = item.values;
   if (!scenarioFields.every(id => Number.isFinite(fields[id]))) return false;
   if (!Object.keys(experimentFields).every(id => !(id in fields) || validNumber(id, fields[id]))) return false;
@@ -2262,6 +2500,8 @@ function applyScenario(item) {
     $(id).value = String(item.values[id]);
   }
   for (const [id, fallback] of Object.entries(experimentFields)) $(id).value = item.values[id] ?? fallback;
+  sensorPoints = (item.channels ?? []).map(point=>({...point}));
+  sensorSelected = undefined;
   state.scheme = item.scheme;
   state.view = item.view;
   applyAria(schemes, 'scheme', state.scheme);
@@ -2328,7 +2568,7 @@ $('snapshot-form').addEventListener('submit', event => {
   if (!activeModel) return;
   const item = {
     version: 1, name: $('snapshot-name').value.trim(), savedAt: new Date().toISOString(),
-    scheme: state.scheme, view: state.view,
+    scheme: state.scheme, view: state.view, channels: sensorPoints.map(point=>({...point})),
     values: Object.fromEntries([...scenarioFields,...Object.keys(experimentFields)].map(id => [id,readNumber(id)])),
   };
   if (!validScenario(item)) {
@@ -2525,7 +2765,7 @@ for (const id of ['layer-plate','layer-flange','layer-water','layer-bolts','expl
   queuePaint();
 });
 
-function chart(canvas, series, {xUnit, yUnit='MPa', guides=[], message=''}={}) {
+function chart(canvas, series, {xUnit, yUnit='MPa', guides=[], message='', cursor=null, xExtent=null}={}) {
   const {context:ctx,width,height} = prepareCanvas(canvas);
   if (!width || !height) return;
   if (!series.length) {
@@ -2537,6 +2777,7 @@ function chart(canvas, series, {xUnit, yUnit='MPa', guides=[], message=''}={}) {
     left=Math.min(left,x); right=Math.max(right,x);
     low=Math.min(low,y); high=Math.max(high,y);
   }
+  if (xExtent) [left,right]=xExtent;
   if (high <= low) high=low+1;
   if (right <= left) right=left+1;
   const inset=width < 410 ? 44 : 57;
@@ -2562,6 +2803,17 @@ function chart(canvas, series, {xUnit, yUnit='MPa', guides=[], message=''}={}) {
   }
   for (const {points,tint,dash=[]} of series) {
     path(ctx,points.map(project),{stroke:tint,line:1.8,dash,close:false});
+  }
+  if (cursor!==null && cursor>=left && cursor<=right) {
+    const [x]=project([cursor,0]);
+    path(ctx,[[x,28],[x,height-25]],{stroke:color('mint-dark'),close:false});
+    for (const {points,tint} of series) {
+      const value=interp(points,cursor);
+      if (value===null) continue;
+      const [u,v]=project([cursor,value]);
+      ctx.fillStyle=tint;ctx.strokeStyle=color('plot');ctx.lineWidth=1.3;
+      ctx.beginPath();ctx.arc(u,v,4.1,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }
   }
 }
 function currentProfile() {
@@ -2749,28 +3001,9 @@ $('toggle-archive-compare').addEventListener('click',() => {
   if (!panel.hidden) renderPair();
 });
 
-function parseTrace(text) {
-  const lines=text.trim().split(/\r?\n/).filter(line=>line.trim());
-  const header=lines.shift()?.toLowerCase().split(',').map(value=>value.trim().replace(/^"|"$/g,''));
-  if (header?.length!==2 || !['t_s','time_s'].includes(header[0]) || header[1]!=='pressure_mpa') {
-    throw new Error('表头应为 t_s,pressure_mpa。');
-  }
-  if (lines.length<2 || lines.length>100000) throw new Error('需要 2–100,000 条采集记录。');
-  const number=/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
-  const rows=[];
-  for (const [i,line] of lines.entries()) {
-    const values=line.split(',').map(value=>value.trim().replace(/^"|"$/g,''));
-    if (values.length!==2 || !values.every(value=>number.test(value))) throw new Error('第 ' + (i+2) + ' 行有无效数字。');
-    const valuesNum=values.map(Number);
-    const [time,pressure]=valuesNum;
-    if (!Number.isFinite(time) || !Number.isFinite(pressure) || time<0 || time>1e9 || Math.abs(pressure)>1e6
-        || (i>0 && time<=rows[i-1][0])) throw new Error('第 ' + (i+2) + ' 行超出范围，或时间未严格递增。');
-    rows.push(valuesNum);
-  }
-  return rows;
-}
 function interp(points, time) {
-  if (time<points[0][0] || time>points.at(-1)[0]) return null;
+  if (!points.length || time<points[0][0] || time>points.at(-1)[0]) return null;
+  if (points.length===1) return points[0][1];
   let low=0,high=points.length-1;
   while (high-low>1) {
     const middle=(low+high)>>1;
@@ -2787,15 +3020,18 @@ function renderTrace() {
   const series=[];
   const guide=plan?[plan.ramp,plan.ramp+plan.hold]:[];
   if (plan) series.push({points:plan.points,tint:color('quiet'),dash:[4,4]});
-  series.push({points,tint:color('mint')});
-  chart($('trace-chart'),series,{xUnit:'时间 / s',guides:guide});
+  series.push({points:recordedTrace.plot,tint:color('mint')});
+  const cursor=paintTracePlayer(plan);
+  chart($('trace-chart'),series,{xUnit:'时间 / s',guides:guide,cursor,xExtent:traceXExtent(points,plan)});
   $('trace-max').textContent=decimal(recordedTrace.peak,4) + ' MPa';
   $('trace-count').textContent=decimal(points.length,0);
   const [first,last]=guide.map(time=>interp(points,time));
   $('trace-delta').textContent=first!=null && last!=null ? decimal(last-first,4) + ' MPa' : '无完整保压覆盖';
 }
 $('choose-trace').addEventListener('click',()=>$('trace-file').click());
-$('trace-template').addEventListener('click',() => offerCsv('采集格式示例','t_s,pressure_mpa',[[0,0],[1,0],[2,0]]));
+$('trace-template').addEventListener('click',() => {
+  download(new Blob([traceExample+'\r\n'],{type:'text/csv;charset=utf-8'}),'多通道采集示例.csv');
+});
 $('trace-file').addEventListener('change',async event => {
   const file=event.currentTarget.files[0];
   event.currentTarget.value='';
@@ -2806,12 +3042,7 @@ $('trace-file').addEventListener('change',async event => {
     if (file.size>5*1024*1024) throw new Error('文件不能大于 5 MB。');
     const content=await file.text();
     if (ticket!==traceRead) return;
-    const points=parseTrace(content);
-    recordedTrace={points,peak:points.reduce((peak,point)=>Math.max(peak,point[1]),-Infinity)};
-    status.removeAttribute('data-warning');
-    status.textContent=file.name + ' · 实测为实线，当前计划为灰色虚线。';
-    $('trace-results').hidden=false;
-    queuePaint();
+    installTrace(content,file.name);
   } catch (error) {
     if (ticket!==traceRead) return;
     status.setAttribute('data-warning','');
@@ -2861,6 +3092,7 @@ function renderScenarioDelta() {
   $('delta-note').textContent=list.length?
     (rows.length?'有 ' + rows.length + ' 项参数发生变化。': '所选工况一致。') :
     '先保存或导入快照，即可逐项对比参数。';
+  setTrialPair(base,compare);
 }
 for (const id of ['delta-base','delta-compare']) $(id).addEventListener('change',renderScenarioDelta);
 
@@ -2880,10 +3112,671 @@ $('export-handoff').addEventListener('click',() => {
     '水压合力  ' + decimal(model.pressure*model.length*model.width/1000) + ' kN',
     '附加压应力估算峰值  ' + formatStress(activeEstimate.peak.value) + ' MPa',
     plan?'试验计划  升压 ' + plan.ramp + ' s / 保压 ' + plan.hold + ' s / 卸压 ' + plan.release + ' s':'试验计划  待补充',
+    ...sensorPoints.map(point=>'采集通道  '+point.name+' / '+sensorKinds[point.kind].title+' / '+point.x+' / '+point.y+' mm'),
     '采集文件编号  ____________________','记录人  ____________________','',
     '本文件用于参数交接，安装、加载与停机条件以批准的试验方案为准。'];
   download(new Blob([lines.join('\r\n') + '\r\n'],{type:'text/plain;charset=utf-8'}),'高水压试验交接单.txt');
 });
+
+const timelines = [];
+function makeTimeline(id, playLabel, seconds, update) {
+  const slider = $(id + '-scrub'), play = $(id + '-play');
+  const limit = Number(slider.max);
+  let running = false, frame = 0, started, from, previous;
+  function stop() {
+    running = false;
+    cancelAnimationFrame(frame);
+    play.setAttribute('aria-pressed','false');
+    play.textContent = playLabel;
+  }
+  function refresh(value) {
+    slider.value = String(Math.round(Math.max(0,Math.min(1,value))*limit));
+    update(Number(slider.value)/limit);
+  }
+  function tick(at) {
+    if (!running) return;
+    started ??= at;
+    const value = Math.min(1,from+(at-started)/(seconds*1000));
+    if (value===1 || previous===undefined || at-previous>=42) {
+      refresh(value);
+      previous = at;
+    }
+    if (value===1) stop();
+    else frame = requestAnimationFrame(tick);
+  }
+  play.addEventListener('click',() => {
+    if (running) { stop(); return; }
+    if (Number(slider.value)===limit) refresh(0);
+    from = Number(slider.value)/limit;
+    started = previous = undefined;
+    running = true;
+    play.setAttribute('aria-pressed','true');
+    play.textContent = '暂停';
+    frame = requestAnimationFrame(tick);
+  });
+  slider.addEventListener('input',() => { stop(); update(Number(slider.value)/limit); });
+  const timeline = {
+    stop, set(value) { stop(); refresh(value); },
+    ratio() { return Number(slider.value)/limit; },
+    enable(enabled) { play.disabled = !enabled; slider.disabled = !enabled; if (!enabled) stop(); },
+  };
+  timelines.push(timeline);
+  return timeline;
+}
+function pauseTimelines() {
+  for (const timeline of timelines) timeline.stop();
+}
+document.addEventListener('visibilitychange',() => { if (document.hidden) pauseTimelines(); });
+
+let sequenceCount = 0;
+let sequenceComplete = new Set();
+let sequenceLayoutKey;
+let gapHit = null;
+
+const boltTimeline = makeTimeline('bolt','播放装配顺序',16, ratio => {
+  const count = Math.round(ratio * boltOrder.length);
+  if (count !== sequenceCount) {
+    sequenceCount = count;
+    sequenceComplete = new Set(boltOrder.slice(0,count).map(hole=>hole.id));
+    if (count) selectHole(boltOrder[count-1].index,false);
+    else queuePaint();
+  }
+  updateSequenceOutput();
+});
+
+function updateSequenceOutput() {
+  const hole = boltOrder[sequenceCount-1];
+  $('bolt-phase').textContent = (hole ? '孔 ' + holeId(hole.id) + ' · ' : '') + sequenceCount + ' / ' + boltOrder.length;
+  $('rehearsed-legend').hidden = sequenceCount===0;
+}
+function syncBolts(layout) {
+  boltTimeline.enable(Boolean(layout));
+  const key = layout ? [activeModel.ringL,activeModel.ringW,...boltOrder.map(hole=>hole.id)].join(',') : '';
+  if (key !== sequenceLayoutKey) {
+    sequenceLayoutKey = key;
+    boltTimeline.set(0);
+  }
+  updateSequenceOutput();
+}
+
+function paintSpacing() {
+  const {context:ctx,width,height} = prepareCanvas($('gap-chart'));
+  gapHit = null;
+  if (width < 100 || height < 70) return;
+  if (!activeLayout) {
+    $('gap-detail').textContent = '等待有效孔位。';
+    plotText(ctx,'暂无孔距',width/2,height/2,{align:'center'});
+    return;
+  }
+  const {gaps,ids} = activeLayout;
+  const gapMax = Math.max(...gaps), mean = activeModel.perimeter/gaps.length;
+  const left = width<390 ? 42:53, right = width-15, bottom = height-24, top = 18;
+  const max = gapMax*1.13;
+  const bar = (right-left)/gaps.length, chartHeight = bottom-top;
+  const y = value => bottom-chartHeight*value/max;
+  for (const level of [0,.25,.5,.75,1]) {
+    const pos = y(level*gapMax);
+    path(ctx,[[left,pos],[right,pos]],{stroke:color('line'),close:false});
+    plotText(ctx,decimal(level*gapMax,0),left-7,pos,{align:'right',size:10});
+  }
+  gaps.forEach((value,index) => {
+    ctx.fillStyle = index===state.hole ? color('mint-dark') :
+      value===gapMax ? '#a6664c' : '#b7a79b';
+    const padding = bar>.8 ? Math.min(1.5,bar*.12) : 0;
+    ctx.fillRect(left+index*bar+padding,y(value),Math.max(.55,bar-padding*2),bottom-y(value));
+  });
+  path(ctx,[[left,y(mean)],[right,y(mean)]],{stroke:'#3f514b',dash:[4,3],close:false});
+  for (let i=0; i<gaps.length; i+=Math.ceil(gaps.length/(width<400?7:12))) {
+    plotText(ctx,holeId(ids[i]),left+(i+.5)*bar,height-11,{size:10,align:'center'});
+  }
+  gapHit = {left,right,bar};
+  const idx = state.hole;
+  $('gap-detail').textContent = '孔 ' + holeId(ids[idx]) + ' → ' + holeId(ids[(idx+1)%ids.length]) + ' · ' +
+    decimal(gaps[idx]) + ' mm ｜ 均值 ' + decimal(mean) + ' mm ｜ 峰值 ' + decimal(gapMax) + ' mm';
+}
+$('gap-chart').addEventListener('click',event=>{
+  if (!gapHit || !activeLayout) return;
+  const x=event.clientX-event.currentTarget.getBoundingClientRect().left;
+  if (x>=gapHit.left && x<gapHit.right) selectHole(Math.min(activeLayout.ids.length-1,Math.floor((x-gapHit.left)/gapHit.bar)),false);
+});
+
+const depthMapShape = {columns:121,rows:61,min:10,max:160};
+let depthMap;
+let depthPoint = null;
+let mapScreen;
+const depthTimeline = makeTimeline('depth-map','播放深度',10,() => queuePaint());
+
+function sectionCoordinates(model, layout) {
+  const aperture = profileAxis==='x' ? model.ringL : model.ringW;
+  const fixedLimit = (profileAxis==='x' ? model.ringW : model.ringL)/2+60;
+  const fixed = probe ? profileAxis==='x'
+    ? fixedLimit*(1-2*probe.row/(activeEstimate.rows-1))
+    : fixedLimit*(2*probe.col/(activeEstimate.cols-1)-1)
+    : 0;
+  return {
+    axis:profileAxis, fixed, span:aperture/2+60, force:readNumber('hole-force'),
+    holes:layout.holes.map(hole=>({hole_id:holeId(hole.id),x_mm:hole.x,y_mm:hole.y})),
+  };
+}
+function localSection(request) {
+  const {columns,rows,min,max} = depthMapShape;
+  const field=new Float64Array(columns*rows);
+  let peak=0;
+  const others=request.holes.map(h=> request.axis==='x' ? [h.x_mm,(h.y_mm-request.fixed)**2] : [h.y_mm,(h.x_mm-request.fixed)**2]);
+  for (let r=0;r<rows;r++) {
+    const z=min+r*(max-min)/(rows-1), z2=z*z;
+    const f=3*request.force*1000*z**3/(2*Math.PI);
+    for (let c=0;c<columns;c++) {
+      const pos=request.span*(2*c/(columns-1)-1);
+      let total=0;
+      for (const [u,q] of others) {
+        const d=(pos-u)**2+q+z2;
+        total+=f/(d*d*Math.sqrt(d));
+      }
+      field[r*columns+c]=total;
+      if (total>peak) peak=total;
+    }
+  }
+  return { field,peak };
+}
+function ensureSection() {
+  if (!activeLayout) return null;
+  const args=sectionCoordinates(activeModel,activeLayout);
+  const key = JSON.stringify(args);
+  if (depthMap?.key===key) return depthMap;
+  const entry={...args,key,source:'本地计算'};
+  depthMap=entry;
+  if (location.protocol==='file:') Object.assign(entry,localSection(args));
+  else {
+    api('/api/stress/section',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({holes:args.holes,ring_length_mm:activeModel.ringL,ring_width_mm:activeModel.ringW,
+        force_kn:args.force,axis:args.axis,slice_mm:args.fixed}),
+    }).then(result=>{
+      if (entry!==depthMap) return;
+      Object.assign(entry,{field:result.values_mpa.flat(),peak:result.peak_mpa,source:'FastAPI'});
+      queuePaint();
+    }).catch(()=>{
+      if (entry!==depthMap) return;
+      Object.assign(entry,localSection(args));
+      queuePaint();
+    });
+  }
+  return entry;
+}
+function paintDepthMap() {
+  const {context:ctx,width,height}=prepareCanvas($('depth-section-canvas'));
+  if (width < 100 || height < 75) return;
+  const entry=ensureSection();
+  const {columns,rows,min,max}=depthMapShape;
+  depthTimeline.enable(Boolean(entry?.field));
+  mapScreen=null;
+  $('depth-map-mode').textContent=(profileAxis==='x'?'X':'Y')+'–Z 剖面';
+  if (!entry?.field) {
+    plotText(ctx,entry?'正在计算深度剖面…':'暂无数据',width/2,height/2,{align:'center'});
+    $('depth-map-value').textContent='—';
+    return;
+  }
+  if (!entry.raster) {
+    const raster=document.createElement('canvas');
+    raster.width=columns; raster.height=rows;
+    const rr=raster.getContext('2d'), pixels=rr.createImageData(columns,rows);
+    for (let i=0;i<entry.field.length;i++) {
+      const [r,g,b]=shade(Math.sqrt(entry.peak ? entry.field[i]/entry.peak : 0));
+      pixels.data.set([r,g,b,255],i*4);
+    }
+    rr.putImageData(pixels,0,0);
+    entry.raster=raster;
+  }
+  const left=37, top=25, right=width-61, bottom=height-24;
+  const mapW=right-left, mapH=bottom-top;
+  const col=Math.round((depthPoint??.5)*(columns-1)), row=Math.round(depthTimeline.ratio()*(rows-1));
+  const position=entry.span*(2*col/(columns-1)-1);
+  const z=min+row*(max-min)/(rows-1);
+  const value=entry.field[row*columns+col];
+  const px=left+col*mapW/(columns-1), py=top+row*mapH/(rows-1);
+  ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(entry.raster,left,top,mapW,mapH);
+  path(ctx,[[left,py],[right,py]],{stroke:'#fff5e4',dash:[4,3],close:false});
+  path(ctx,[[px,top],[px,bottom]],{stroke:'#fff5e4ad',dash:[3,3],close:false});
+  ctx.strokeStyle='#fff5e4';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px,py,3.5,0,Math.PI*2);ctx.stroke();
+  for(const fraction of [0,.5,1]) {
+    const y=top+mapH*fraction;
+    plotText(ctx,decimal(min+(max-min)*fraction),left-7,y,{align:'right',size:10});
+    const x=left+mapW*fraction;
+    plotText(ctx,decimal(entry.span*(2*fraction-1),0),x,bottom+12,{align:'center',size:10});
+  }
+  const barX=right+10;
+  for(let y=0;y<mapH;y++) {
+    ctx.fillStyle='rgb('+shade(1-y/mapH).join(',')+')';
+    ctx.fillRect(barX,top+y,8,1.3);
+  }
+  for(const fraction of [0,.5,1]) plotText(ctx,formatStress(entry.peak*(1-fraction)**2),barX+12,top+mapH*fraction,{size:9});
+  plotText(ctx,'Z / mm',left,11,{size:10});
+  plotText(ctx,'MPa',width-10,11,{align:'right',size:10});
+  $('depth-map-read').textContent=decimal(z)+' mm';
+  $('depth-map-value').textContent=formatStress(value)+' MPa';
+  $('depth-map-note').textContent=(entry.axis==='x'?'Y':'X')+' = '+decimal(entry.fixed)+' mm · 游标 '+decimal(position)+' mm · '+entry.source;
+  mapScreen={left,top,right,bottom};
+}
+$('depth-section-canvas').addEventListener('click',event=>{
+  if (!mapScreen) return;
+  const rect=event.currentTarget.getBoundingClientRect();
+  const {left,right,top,bottom}=mapScreen;
+  const x=event.clientX-rect.left,y=event.clientY-rect.top;
+  if (x<left||x>right||y<top||y>bottom) return;
+  depthPoint=(x-left)/(right-left);
+  depthTimeline.set((y-top)/(bottom-top));
+});
+
+const rehearsalTimeline = makeTimeline('rehearsal','播放加载',14,() => queuePaint());
+const stageButtons = [...document.querySelectorAll('[data-stage]')];
+
+function pressureAt(plan, elapsed) {
+  if (elapsed < 0 || elapsed > plan.points.at(-1)[0]) return 0;
+  return interp(plan.points,elapsed) ?? 0;
+}
+
+function paintRehearsal() {
+  const plan = currentProtocol();
+  rehearsalTimeline.enable(Boolean(plan));
+  for (const button of stageButtons) button.disabled = !plan;
+  const canvas=$('rehearsal-canvas');
+  const {context:ctx,width,height}=prepareCanvas(canvas);
+  if (width<100 || height<100) return;
+  if (!plan) {
+    for (const id of ['rehearsal-time','rehearsal-stage','rehearsal-pressure','rehearsal-force']) $(id).textContent='—';
+    plotText(ctx,'设置当前工况和三个加载阶段',width/2,height/2,{align:'center'});
+    return;
+  }
+  const total=plan.points.at(-1)[0], time=total*rehearsalTimeline.ratio();
+  const phase=time>=total?'end':time<plan.ramp?'ramp':time<plan.ramp+plan.hold?'hold':'release';
+  const pressure=pressureAt(plan,time), force=pressure*activeModel.length*activeModel.width/1000;
+  const level=pressure/plan.pressure;
+  $('rehearsal-time').textContent=decimal(time)+' s';
+  $('rehearsal-stage').textContent={ramp:'升压',hold:'保压',release:'卸压',end:'已卸载'}[phase];
+  $('rehearsal-pressure').textContent=decimal(pressure,3)+' MPa';
+  $('rehearsal-force').textContent=decimal(force)+' kN';
+  applyAria(stageButtons,'stage',phase);
+  drawPlotGrid(ctx,width,height);
+  const left=Math.max(31,width*.14),right=width-left;
+  const tankTop=height*.25,tankBottom=height*.65;
+  const slabLeft=left-12,slabWidth=right-left+24;
+  ctx.fillStyle='#dad0c1';
+  ctx.fillRect(slabLeft,tankBottom,slabWidth,height*.13);
+  ctx.strokeStyle='#68574b';ctx.lineWidth=1;ctx.strokeRect(slabLeft,tankBottom,slabWidth,height*.13);
+  const fill=ctx.createLinearGradient(0,tankTop,0,tankBottom);
+  fill.addColorStop(0,'rgba(115,138,130,'+(.18+.33*level)+')');
+  fill.addColorStop(1,'rgba(82,105,100,'+(.27+.55*level)+')');
+  ctx.fillStyle=fill;ctx.fillRect(left,tankTop,right-left,tankBottom-tankTop);
+  ctx.strokeStyle='#5a5147';ctx.lineWidth=2;ctx.strokeRect(left,tankTop,right-left,tankBottom-tankTop);
+  const center=(left+right)/2;
+  path(ctx,[[center-40,tankTop-21],[center,tankTop-21],[center,tankTop]],{stroke:'#6e6155',line:2,close:false});
+  ctx.strokeStyle=color('mint');ctx.beginPath();ctx.arc(center-46,tankTop-21,6,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(147,61,45,'+(level*.85)+')';
+  ctx.beginPath();ctx.arc(center-46,tankTop-21,4,0,Math.PI*2);ctx.fill();
+  if (level>.002) {
+    for(let i=1;i<=7;i++){
+      const x=left+(right-left)*i/8, y=tankBottom-7;
+      const tip=tankBottom-13-(tankBottom-tankTop-19)*(.18+.77*level);
+      path(ctx,[[x,tip],[x,y],[x-4,y-5],[x,y],[x+4,y-5]],
+        {stroke:'rgba(255,248,233,'+(.40+.55*level)+')',line:1+level*.55,close:false});
+    }
+  }
+  plotText(ctx,'加载腔截面',center,tankTop-36,{align:'center',size:11});
+  plotText(ctx,'混凝土试件',center,tankBottom+height*.145+10,{align:'center',size:11});
+  const trackY=height-15;
+  let x=left;
+  const phases=[['ramp',plan.ramp],['hold',plan.hold],['release',plan.release]];
+  for (const [key,length] of phases) {
+    ctx.fillStyle=phase===key?color('mint'):'#c8baac';
+    ctx.fillRect(x,trackY,(right-left)*length/total-1,3);
+    x+=(right-left)*length/total;
+  }
+  ctx.fillStyle='#312821';
+  ctx.beginPath();ctx.arc(left+rehearsalTimeline.ratio()*(right-left),trackY+1.5,3.8,0,Math.PI*2);ctx.fill();
+  canvas.setAttribute('aria-label','水箱加载示意，'+$('rehearsal-stage').textContent+'，'+$('rehearsal-pressure').textContent);
+}
+for (const button of stageButtons) button.addEventListener('click',()=>{
+  const plan=currentProtocol();
+  if (!plan) return;
+  const t={ramp:plan.ramp/2,hold:plan.ramp+plan.hold/2,release:plan.ramp+plan.hold+plan.release/2};
+  rehearsalTimeline.set(t[button.dataset.stage]/plan.points.at(-1)[0]);
+});
+
+const sensorKinds={
+  pressure:{title:'水压',abbr:'P',unit:'MPa',tint:'#8f3927'},
+  dic:{title:'DIC 测区',abbr:'DIC',unit:'mm',tint:'#46665c'},
+  ae:{title:'声发射 AE',abbr:'AE',unit:'count',tint:'#6b5487'},
+  strain:{title:'应变',abbr:'SG',unit:'ue',tint:'#845b2d'},
+  fiber:{title:'光纤应变',abbr:'OF',unit:'ue',tint:'#415e7c'},
+};
+let sensorPoints=[];
+let sensorScreen=null;
+let sensorSelected;
+const validSensorName = name => typeof name==='string' && /^[\p{L}\p{N}][\p{L}\p{N}_.-]{0,23}$/u.test(name);
+function validSensorPlan(items) {
+  return Array.isArray(items) && items.length<=32 && items.every(item=>
+    item && validSensorName(item.name) && Object.hasOwn(sensorKinds,item.kind) &&
+    [item.x,item.y].every(value=>Number.isFinite(value) && Math.abs(value)<=1e9)) &&
+    new Set(items.map(item=>item.name.toLowerCase())).size===items.length;
+}
+function isWithinSensorBounds(item) {
+  return activeModel && Math.abs(item.x)<=activeModel.length/2+1e-9 && Math.abs(item.y)<=activeModel.width/2+1e-9;
+}
+function sensorTag(kind) {
+  let i=1;
+  const used=new Set(sensorPoints.map(item=>item.name.toLowerCase()));
+  while (used.has((sensorKinds[kind].abbr+i).toLowerCase())) i++;
+  return sensorKinds[kind].abbr+i;
+}
+function renderSensorTable() {
+  const rows=sensorPoints.map(item=>{
+    const row=document.createElement('tr');
+    if (!isWithinSensorBounds(item)) row.setAttribute('data-warning','');
+    if (item.name===sensorSelected) row.classList.add('selected');
+    const label=document.createElement('button');
+    label.className='hole-button';label.type='button';label.textContent=item.name;
+    label.addEventListener('click',()=>{
+      sensorSelected=item.name;
+      $('sensor-x').value=item.x;
+      $('sensor-y').value=item.y;
+      $('sensor-kind').value=item.kind;
+      renderSensorTable();queuePaint();
+    });
+    row.insertCell().append(label);
+    row.insertCell().textContent=sensorKinds[item.kind].title;
+    row.insertCell().textContent=decimal(item.x)+' / '+decimal(item.y);
+    const remove=document.createElement('button');
+    remove.className='button';remove.type='button';remove.textContent='移除';
+    remove.setAttribute('aria-label','移除 '+item.name);
+    remove.addEventListener('click',()=>{
+      sensorPoints=sensorPoints.filter(point=>point!==item);
+      if (sensorSelected===item.name) sensorSelected=undefined;
+      renderSensorTable();queuePaint();
+    });
+    row.insertCell().append(remove);
+    return row;
+  });
+  $('sensor-rows').replaceChildren(...rows);
+  $('sensor-export').disabled=!sensorPoints.length;
+  $('sensor-add').disabled=!activeModel || sensorPoints.length>=32;
+  $('sensor-preset').disabled=!activeModel || sensorPoints.length>27;
+}
+function paintSensors() {
+  const canvas=$('sensor-map');
+  const {context:ctx,width,height}=prepareCanvas(canvas);
+  sensorScreen=null;
+  if (width<95||height<80) return;
+  if (!activeModel) {
+    plotText(ctx,'等待有效水腔',width/2,height/2,{align:'center'});
+    return;
+  }
+  drawPlotGrid(ctx,width,height);
+  const L=activeModel.length, W=activeModel.width;
+  const scale=Math.min((width-53)/L,(height-48)/W);
+  const project=(x,y)=>[width/2+x*scale,height/2-y*scale];
+  const [left,top]=project(-L/2,W/2), [right,bottom]=project(L/2,-W/2);
+  ctx.fillStyle='#eee7da';ctx.fillRect(left,top,right-left,bottom-top);
+  ctx.strokeStyle='#a69a89';ctx.strokeRect(left,top,right-left,bottom-top);
+  path(ctx,[[width/2,top],[width/2,bottom]],{stroke:'#a59a88',dash:[3,4],close:false});
+  path(ctx,[[left,height/2],[right,height/2]],{stroke:'#a59a88',dash:[3,4],close:false});
+  plotText(ctx,'Y+',width/2,top-9,{align:'center',size:10});
+  plotText(ctx,'X+',right+12,height/2,{align:'center',size:10});
+  plotText(ctx,decimal(L)+' × '+decimal(W)+' mm',width/2,bottom+12,{align:'center',size:10});
+  const marks=[];
+  for (const item of sensorPoints) {
+    const inside=isWithinSensorBounds(item);
+    if (!inside) continue;
+    const [x,y]=project(item.x,item.y), {tint}=sensorKinds[item.kind];
+    const focused=sensorSelected===item.name;
+    ctx.fillStyle=tint;ctx.beginPath();ctx.arc(x,y,focused?6:4.2,0,Math.PI*2);ctx.fill();
+    if (focused) {
+      ctx.strokeStyle='#312720';ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.stroke();
+    }
+    const nearRight=x>width-97;
+    plotText(ctx,item.name.length>14?item.name.slice(0,13)+'…':item.name,x+(nearRight?-9:9),y-9,{align:nearRight?'right':'left',size:10,fill:tint});
+    marks.push({item,x,y});
+  }
+  sensorScreen={left,right,top,bottom,scale,marks};
+}
+$('sensor-map').addEventListener('click',event=>{
+  const rect=event.currentTarget.getBoundingClientRect();
+  const x=event.clientX-rect.left,y=event.clientY-rect.top;
+  if (!sensorScreen) return;
+  const {left,right,top,bottom,scale,marks}=sensorScreen;
+  if (x<left || x>right || y<top || y>bottom) return;
+  const hit=marks.find(mark=>Math.hypot(x-mark.x,y-mark.y)<8);
+  if (hit) {
+    sensorSelected=hit.item.name;
+    $('sensor-kind').value=hit.item.kind;
+  } else sensorSelected=undefined;
+  $('sensor-x').value=hit?hit.item.x:Number(((x-(left+right)/2)/scale).toFixed(1));
+  $('sensor-y').value=hit?hit.item.y:Number((((top+bottom)/2-y)/scale).toFixed(1));
+  $('sensor-note').textContent=hit?'已定位 '+hit.item.name+'。':'坐标已填入。选择传感器类型后可添加通道。';
+  renderSensorTable();queuePaint();
+});
+$('sensor-add').addEventListener('click',()=>{
+  flushModelRefresh();
+  const kind=$('sensor-kind').value;
+  const name=$('sensor-name').value.trim()||sensorTag(kind);
+  const item={name,kind,x:readNumber('sensor-x'),y:readNumber('sensor-y')};
+  if (!validSensorPlan([...sensorPoints,item])) {
+    $('sensor-note').textContent='通道编号须唯一，以字母或数字开头，可含连字符、下划线或点。';
+    return;
+  }
+  if (!isWithinSensorBounds(item)) {
+    $('sensor-note').textContent='坐标超出当前水腔范围，或未填写有效数值。';
+    return;
+  }
+  sensorPoints.push(item);sensorSelected=item.name;
+  $('sensor-name').value='';
+  $('sensor-note').textContent='已添加 '+item.name+'。';
+  renderSensorTable();queuePaint();
+});
+$('sensor-preset').addEventListener('click',()=>{
+  flushModelRefresh();
+  if(!activeModel || sensorPoints.length>27) return;
+  const offsets=[[0,0],[.25,0],[-.3,.27],[.28,-.24],[-.26,-.26]];
+  Object.keys(sensorKinds).forEach((kind,i)=>{
+    const [x,y]=offsets[i];
+    sensorPoints.push({name:sensorTag(kind),kind,x:Number((x*activeModel.length).toFixed(1)),y:Number((y*activeModel.width).toFixed(1))});
+  });
+  $('sensor-note').textContent='已添加五类仪器的示例定位。';
+  renderSensorTable();queuePaint();
+});
+$('sensor-export').addEventListener('click',()=>{
+  if (!sensorPoints.length) return;
+  offerCsv('采集通道布置','channel,kind,x_mm,y_mm,unit',
+    sensorPoints.map(item=>[item.name,item.kind,item.x,item.y,sensorKinds[item.kind].unit]));
+});
+
+const responseFields = {
+  displacement_mm: { name:'DIC 位移', unit:'mm' },
+  strain_ue: { name:'应变', unit:'με' },
+  ae_count: { name:'声发射计数', unit:'次' },
+  fiber_ue: { name:'光纤应变', unit:'με' },
+};
+const traceExample = [
+  't_s,pressure_mpa,displacement_mm,strain_ue,ae_count,fiber_ue',
+  '0,0,0,0,0,0','30,2.45,0.08,29,2,25','60,4.98,0.16,62,7,57',
+  '90,5.04,0.17,66,8,62','120,5.01,0.17,69,12,64','150,4.96,0.18,74,16,71',
+  '180,4.93,0.18,76,21,72','210,2.52,0.09,42,24,38','240,0.03,0.02,8,25,7',
+].join('\r\n');
+const traceTimeline = makeTimeline('trace','播放采集',15,() => queuePaint());
+const trialTimeline = makeTimeline('trial','播放对照',16,() => queuePaint());
+
+function readTrace(text) {
+  const lines=text.trim().split(/\r?\n/).filter(line=>line.trim());
+  const parse=line=>line.split(',').map(value=>value.trim().replace(/^"|"$/g,''));
+  const fields=lines.length?parse(lines.shift()).map(value=>value.toLowerCase()):[];
+  if (!['t_s','time_s'].includes(fields[0]) || fields[1]!=='pressure_mpa' ||
+      new Set(fields).size!==fields.length || fields.slice(2).some(value=>!Object.hasOwn(responseFields,value))) {
+    throw new Error('首两列应为 t_s,pressure_mpa，后续可添加位移、应变、声发射或光纤通道。');
+  }
+  if (lines.length<2 || lines.length>100000) throw new Error('需要 2–100,000 条采集记录。');
+  const numeric=/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+  const points=[];
+  const responses=Object.fromEntries(fields.slice(2).map(key=>[key,[]]));
+  for (const [i,line] of lines.entries()) {
+    const cells=parse(line);
+    if (cells.length!==fields.length || cells.some((value,col)=>!(col>=2&&!value) && !numeric.test(value))) {
+      throw new Error('第 '+(i+2)+' 行列数不符或包含无效数值。');
+    }
+    const [time,pressure,...others]=cells.map(value=>value?Number(value):null);
+    if (!Number.isFinite(time)||!Number.isFinite(pressure)||time<0||time>1e9 || Math.abs(pressure)>1e6 ||
+        (i>0 && time<=points[i-1][0])) throw new Error('第 '+(i+2)+' 行超出范围，或时间未严格递增。');
+    points.push([time,pressure]);
+    others.forEach((value,j)=>{
+      if (value===null) return;
+      const field=fields[j+2];
+      if (!Number.isFinite(value)||Math.abs(value)>1e12 || (field==='ae_count'&&(!Number.isInteger(value)||value<0))) {
+        throw new Error('第 '+(i+2)+' 行响应值超出范围，或 AE 计数无效。');
+      }
+      responses[field].push([time,value]);
+    });
+  }
+  return {points,responses};
+}
+
+function thinChart(points) {
+  if (points.length<=1600) return points;
+  const reduced=[points[0]];
+  const block=Math.ceil((points.length-2)/780);
+  for(let i=1;i<points.length-1;i+=block) {
+    let low=i,high=i;
+    for(let j=i+1;j<Math.min(points.length-1,i+block);j++){
+      if(points[j][1]<points[low][1])low=j;
+      if(points[j][1]>points[high][1])high=j;
+    }
+    reduced.push(points[Math.min(low,high)]);
+    if(low!==high)reduced.push(points[Math.max(low,high)]);
+  }
+  reduced.push(points.at(-1));
+  return reduced;
+}
+function installTrace(content,name) {
+  const trace=readTrace(content);
+  const channels=Object.entries(trace.responses).filter(([,rows])=>rows.length>1);
+  recordedTrace={
+    ...trace, plot:thinChart(trace.points), peak:trace.points.reduce((p,point)=>Math.max(p,point[1]),-Infinity),
+    channelPlots:Object.fromEntries(channels.map(([key,rows])=>[key,thinChart(rows)])),
+  };
+  $('response-channel').replaceChildren(...channels.map(([key])=>new Option(responseFields[key].name,key)));
+  $('trace-response').hidden=!channels.length;
+  $('trace-results').hidden=false;
+  $('trace-player').hidden=false;
+  const status=$('trace-note');
+  status.removeAttribute('data-warning');
+  status.textContent=name+' · 实测为实线，当前计划为虚线。';
+  traceTimeline.set(0);
+  queuePaint();
+}
+
+function traceXExtent(points, plan) {
+  return plan ? [0,Math.max(points.at(-1)[0],plan.points.at(-1)[0])] : [points[0][0],points.at(-1)[0]];
+}
+
+function paintTracePlayer(plan) {
+  if (!recordedTrace) return;
+  const {points,responses,channelPlots}=recordedTrace;
+  const time=points[0][0]+traceTimeline.ratio()*(points.at(-1)[0]-points[0][0]);
+  const measured=interp(points,time);
+  $('trace-time').textContent=decimal(time,2)+' s';
+  $('trace-current').textContent=decimal(measured,4)+' MPa';
+  const fit=plan&&time>=0&&time<=plan.points.at(-1)[0]?pressureAt(plan,time):null;
+  $('trace-difference').textContent=fit===null?'超出计划区间':decimal(measured-fit,4)+' MPa';
+  const channel=$('response-channel').value;
+  if (!channel) {
+    $('trace-response-value').textContent='无同步通道';
+    return time;
+  }
+  const {name,unit}=responseFields[channel];
+  const value=interp(responses[channel],time);
+  $('trace-response-value').textContent=value===null?'无读数':decimal(value,4)+' '+unit;
+  const extent=traceXExtent(points,plan);
+  chart($('response-chart'),[{points:channelPlots[channel],tint:color('data-secondary')}],
+    {xUnit:'时间 / s',yUnit:unit,cursor:time,xExtent:extent});
+  $('response-chart').setAttribute('aria-label',name+'与压力采集同步曲线，当前 '+$('trace-response-value').textContent);
+  return time;
+}
+$('response-channel').addEventListener('change',queuePaint);
+$('trace-example').addEventListener('click',()=>{
+  traceRead++;
+  installTrace(traceExample,'演示样例数据');
+});
+
+let trialPair;
+function evaluateTrial(item) {
+  const f=item.values;
+  const count=f.count;
+  if (![f.length,f.width,f.margin,f.nx,f.ny,count,f.pressure].every(Number.isFinite) ||
+    f.length<=0||f.width<=0||f.margin<0||f.pressure<=0||f.nx<1||f.ny<1||f.nx+f.ny>256||
+    !Number.isInteger(f.nx)||!Number.isInteger(f.ny)||!Number.isInteger(count)||count<1||count>2*(f.nx+f.ny)) return null;
+  const dims=buildRing(f.length,f.width,f.margin,f.nx,f.ny);
+  if (!Number.isFinite(dims.perimeter)||dims.perimeter<=0||dims.arc.some((value,i)=>i>0&&value<=dims.arc[i-1])) return null;
+  const layout=createLayouts({...dims,count})[item.scheme];
+  const [ramp,hold,release]=protocolFields.map(id=>f[id]);
+  if (![ramp,hold,release].every(n=>Number.isFinite(n)&&n>=1&&n<=86400)) return null;
+  return {ramp,hold,release,area:f.length*f.width,pressure:f.pressure,maxGap:layout.maximum,cv:layout.cv,
+    points:[[0,0],[ramp,f.pressure],[ramp+hold,f.pressure],[ramp+hold+release,0]]};
+}
+function setTrialPair(a,b) {
+  const name=id=>$(id).selectedOptions[0]?.textContent ?? '当前工作台';
+  const pairKey=JSON.stringify([a,b,name('delta-base'),name('delta-compare')]);
+  if (trialPair?.key===pairKey) return;
+  trialPair={key:pairKey,a:evaluateTrial(a),b:evaluateTrial(b)};
+  $('trial-label-a').textContent='A · '+name('delta-base');
+  $('trial-label-b').textContent='B · '+name('delta-compare');
+  trialTimeline.set(0);
+}
+function paintTrialCompare() {
+  const a=trialPair?.a,b=trialPair?.b;
+  trialTimeline.enable(Boolean(a&&b));
+  if (!a || !b) {
+    chart($('trial-compare-chart'),[],{message:'选择两个参数有效的工况'});
+    $('trial-time').textContent='—';
+    $('trial-metrics').replaceChildren();
+    return;
+  }
+  const end=Math.max(a.points.at(-1)[0],b.points.at(-1)[0]);
+  const time=trialTimeline.ratio()*end;
+  const withEnd=plan=>plan.points.at(-1)[0]<end?[...plan.points,[end,0]]:plan.points;
+  chart($('trial-compare-chart'),[
+    {points:withEnd(a),tint:color('mint')},
+    {points:withEnd(b),tint:color('data-secondary'),dash:[6,4]},
+  ],{xUnit:'时间 / s',cursor:time});
+  const pa=pressureAt(a,time),pb=pressureAt(b,time);
+  $('trial-time').textContent=decimal(time,2)+' s';
+  const values=[
+    ['游标水压',pa,pb,'MPa'],['游标水压合力',pa*a.area/1000,pb*b.area/1000,'kN'],
+    ['最大周向间距',a.maxGap,b.maxGap,'mm'],['间距变异系数',a.cv,b.cv,''],
+    ['计划总时长',a.points.at(-1)[0],b.points.at(-1)[0],'s'],
+  ];
+  if (!$('trial-metrics').children.length) {
+    for (const [label] of values) {
+      const row=$('trial-metrics').insertRow();
+      const head=document.createElement('th');
+      head.textContent=label;head.scope='row';row.append(head);
+      row.insertCell();row.insertCell();
+    }
+  }
+  values.forEach(([,x,y,unit],i)=>{
+    const cells=$('trial-metrics').rows[i].cells, digits=unit ? (unit==='MPa'?3:1) : 3;
+    cells[1].textContent=decimal(x,digits)+(unit?' '+unit:'');
+    cells[2].textContent=decimal(y,digits)+(unit?' '+unit:'');
+  });
+}
+
+for (const button of document.querySelectorAll('[data-tool]')) {
+  button.addEventListener('click',() => {
+    const target=$(button.dataset.tool);
+    const panel=target.closest('.plate,.sheet') ?? target;
+    panel.scrollIntoView({block:'start'});
+    if (!target.hasAttribute('tabindex')) target.tabIndex=-1;
+    target.focus({preventScroll:true});
+  });
+}
 
 $('geometry').addEventListener('input', scheduleModelRefresh);
 $('geometry').addEventListener('change', scheduleModelRefresh);
@@ -2907,7 +3800,8 @@ $('hole-rows').addEventListener('click', event => {
 });
 window.addEventListener('resize', queuePaint, { passive: true });
 const observer = new ResizeObserver(queuePaint);
-for (const id of ['assembly-stage','stress-canvas','profile-chart','protocol-chart','trace-chart']) observer.observe($(id));
+for (const id of ['assembly-stage','stress-canvas','profile-chart','protocol-chart','trace-chart','gap-chart',
+  'depth-section-canvas','rehearsal-canvas','sensor-map','response-chart','trial-compare-chart']) observer.observe($(id));
 refreshModel();
 showArchive();
 showWorkspace();

@@ -1,6 +1,6 @@
 """Geometry and elastic half-space estimates in N, mm and MPa."""
 from math import hypot, pi, sqrt
-from typing import Annotated
+from typing import Annotated, Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -168,6 +168,38 @@ def sweep_stress(geometry: StressGeometry):
                 "peak_position_mm": reference["peak_position_mm"],
             })
     return {"cases": cases, "grid": reference["grid"], "method": reference["method"]}
+
+
+class StressSectionRequest(StressGeometry):
+    force_kn: float = Field(gt=0, le=200)
+    axis: Literal["x", "y"]
+    slice_mm: Coordinate = 0
+
+
+def stress_section(request: StressSectionRequest):
+    """Resolve a vertical Boussinesq section with depth increasing from top to bottom."""
+    columns, rows = 121, 61
+    span = request.ring_length_mm if request.axis == "x" else request.ring_width_mm
+    axis, fixed_axis = ("x_mm", "y_mm") if request.axis == "x" else ("y_mm", "x_mm")
+    half_span = span / 2 if span is not None else max(abs(getattr(h, axis)) for h in request.holes)
+    lateral = np.linspace(-half_span - GRID_PADDING_MM, half_span + GRID_PADDING_MM, columns)
+    depths = np.linspace(10.0, 160.0, rows)[:, None]
+    coefficient = 3 * request.force_kn * 1000 * depths**3 / (2 * pi)
+    field = np.zeros((rows, columns))
+    for hole in request.holes:
+        q = (lateral - getattr(hole, axis))**2 + (request.slice_mm - getattr(hole, fixed_axis))**2 + depths**2
+        field += coefficient / (q*q*np.sqrt(q))
+    return {
+        "axis": request.axis,
+        "slice_mm": request.slice_mm,
+        "lateral_mm": [float(lateral[0]), float(lateral[-1])],
+        "depth_mm": [10.0, 160.0],
+        "columns": columns,
+        "rows": rows,
+        "values_mpa": field.tolist(),
+        "peak_mpa": float(field.max()),
+        "method": "boussinesq_elastic_halfspace",
+    }
 
 
 class SimulationRequest(LayoutRequest):

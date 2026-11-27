@@ -13,7 +13,8 @@ from fastapi.responses import FileResponse, Response
 from .abaqus.build_model import mesh_preflight
 from .jobs import Jobs, QueueFull, Settings
 from .physics import (
-    LayoutRequest, SimulationRequest, StressGeometry, StressRequest, estimate, optimize, sweep_stress,
+    LayoutRequest, SimulationRequest, StressGeometry, StressRequest, StressSectionRequest,
+    estimate, optimize, stress_section, sweep_stress,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +62,10 @@ def create_app(settings=None):
     @app.post("/api/stress/sweep")
     def sweep(request: StressGeometry):
         return sweep_stress(request)
+
+    @app.post("/api/stress/section")
+    def section(request: StressSectionRequest):
+        return stress_section(request)
 
     @app.get("/api/simulation/availability")
     def availability():
